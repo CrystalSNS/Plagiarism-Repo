@@ -1,12 +1,12 @@
 package main;
 
-import java.lang.reflect.Array;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Sentence {
 
-	Array words[];
+	int id;
 	int lengthByWords;
 	int lengthByChar;
 	float word_Mean, word_5, word_95;
@@ -15,13 +15,15 @@ public class Sentence {
 	float char4_Mean, char4_5, char4_95;
 	Map<String, Float> num_punctuation = new HashMap<String, Float>();
 	Map<String, Float> num_POS = new HashMap<String, Float>();
+	String originalSentence;
+	List<String> words;
 
-	public Array[] getWords() {
-		return words;
+	public int getId() {
+		return id;
 	}
 
-	public void setWords(Array[] words) {
-		this.words = words;
+	public void setId(int id) {
+		this.id = id;
 	}
 
 	public int getLengthByWords() {
@@ -150,6 +152,22 @@ public class Sentence {
 
 	public void setNum_POS(Map<String, Float> num_POS) {
 		this.num_POS = num_POS;
+	}
+
+	public String getOriginalSentence() {
+		return originalSentence;
+	}
+
+	public void setOriginalSentence(String originalSentence) {
+		this.originalSentence = originalSentence;
+	}
+
+	public List<String> getWords() {
+		return words;
+	}
+
+	public void setWords(List<String> words) {
+		this.words = words;
 	}
 
 }

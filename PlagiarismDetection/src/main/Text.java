@@ -7,9 +7,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,43 +38,53 @@ public class Text {
 		return str;
 	}
 
-	public Map<Integer, String> splitToParagraphs(String textOrig) {
+	public List<Document> splitToParagraphes(String textOrig) {
 
-		Map<Integer, String> documents = new HashMap<Integer, String>();
-
+		List<Document> documents = new ArrayList<Document>();
 		Pattern pattern = Pattern.compile("(?:[^\n][\n]?)+", Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(textOrig);
 		int i = 0;
 		while (matcher.find()) {
+			Document document = new Document();
 			i++;
 			String paragraph = matcher.group();
-			documents.put(i, paragraph);
-//			System.out.println("Paragraph: " + paragraph.trim() + "\n");
+			document.setOriginalDoc(paragraph);
+			document.setId(i);
+			documents.add(document);
 
 		}
 		return documents;
 	}
 
-	public Map<Integer, String> splitToSentences(String paragraph) {
-	
-		Map<Integer, String> sentences = new HashMap<Integer, String>();
+	public List<Sentence> splitToSentences(String paragraph) {
+
 		Reader reader = new StringReader(paragraph);
 		DocumentPreprocessor dp = new DocumentPreprocessor(reader);
-		List<String> sentenceList = new ArrayList<String>();
+		List<Sentence> sentenceList = new ArrayList<Sentence>();
 
-		for (List<HasWord> sentence : dp) {
-		   // SentenceUtils not Sentence
-		   String sentenceString = SentenceUtils.listToString(sentence);
-		   sentenceList.add(sentenceString);
-		}
 		int i = 0;
-		
-		for (String sentence : sentenceList) {
+		for (List<HasWord> sen : dp) {
+			Sentence sentence = new Sentence();
 			i++;
-			sentences.put(i, sentence);
-//		   System.out.println(sentence);
+			// SentenceUtils not Sentence
+			String sentenceString = SentenceUtils.listToString(sen);
+			sentence.setOriginalSentence(sentenceString);
+			sentence.setId(i);
+			sentenceList.add(sentence);
 		}
-		return sentences;
-	}	
+		return sentenceList;
+	}
+	
+	public Integer findTextLengthByWord(String text){
+		String trimmed = text.trim();
+		int length = trimmed.isEmpty() ? 0 : trimmed.split("\\s+").length;
+		return length;
+	}
+	
+	public Integer findTextLengthByChar(String text){
+		String trimmed = text.trim();
+		int length = trimmed.isEmpty() ? 0 : trimmed.split("\\s+").length;
+		return length;
+	}
 
 }

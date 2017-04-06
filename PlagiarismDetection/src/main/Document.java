@@ -1,27 +1,29 @@
 package main;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Document {
 
-	Integer numSentences;
+	int id;
+	int numSentences;
 	String mostFrequencyWord;
-	Map<Integer, Sentence> sentencesInDoc = new HashMap<Integer, Sentence>();
+	String originalDoc;
+	List<Sentence> sentencesInDoc = new ArrayList<Sentence>();
 
-	public Map<Integer, Sentence> getSentencesInDoc() {
-		return sentencesInDoc;
+	public int getId() {
+		return id;
 	}
 
-	public void setSentencesInDoc(Map<Integer, Sentence> sentencesInDoc) {
-		this.sentencesInDoc = sentencesInDoc;
+	public void setId(int id) {
+		this.id = id;
 	}
 
-	public Integer getNumSentences() {
+	public int getNumSentences() {
 		return numSentences;
 	}
 
-	public void setNumSentences(Integer numSentences) {
+	public void setNumSentences(int numSentences) {
 		this.numSentences = numSentences;
 	}
 
@@ -31,6 +33,22 @@ public class Document {
 
 	public void setMostFrequencyWord(String mostFrequencyWord) {
 		this.mostFrequencyWord = mostFrequencyWord;
+	}
+
+	public String getOriginalDoc() {
+		return originalDoc;
+	}
+
+	public void setOriginalDoc(String originalDoc) {
+		this.originalDoc = originalDoc;
+	}
+
+	public List<Sentence> getSentencesInDoc() {
+		return sentencesInDoc;
+	}
+
+	public void setSentencesInDoc(List<Sentence> sentencesInDoc) {
+		this.sentencesInDoc = sentencesInDoc;
 	}
 
 }
