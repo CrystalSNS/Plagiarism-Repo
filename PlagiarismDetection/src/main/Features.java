@@ -1,8 +1,5 @@
 package main;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class Features {
 
 	public float findRelationalFrequencyOfWord(Integer numMostWordDoc, Integer numWordDoc, Integer numWordSent) {
@@ -36,14 +33,6 @@ public class Features {
 
 	public float normalizePunctuation(int numPunctuation, int numWordsOfSent) {
 		return numPunctuation / numWordsOfSent;
-	}
-
-	public Map<String, Float> normalizePOS(Map<String, Integer> frequencyPos, int numWordsOfSent) {
-		Map<String, Float> posNor = new  HashMap<String, Float>() ;
-		for (Map.Entry<String, Integer> pos : frequencyPos.entrySet()){
-			posNor.put(pos.getKey(), (float) (pos.getValue()/numWordsOfSent));
-		}
-		return posNor;
 	}
 
 }

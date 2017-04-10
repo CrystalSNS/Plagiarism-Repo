@@ -89,6 +89,7 @@ public class Text {
 		StringTokenizer st = new StringTokenizer(sentence, " ");
 		String wordArr[] = new String[st.countTokens()];
 		wordArr = sentence.split("([.,!?:;'\"-]|\\s)+");
+
 		return wordArr;
 	}
 
@@ -109,7 +110,7 @@ public class Text {
 		return frequencyWord;
 	}
 
-	public Map<String, Integer> findPOSFrequency(String sentence) {
+	public Map<String, Float> findPOSFrequency(Sentence sentence) {
 
 		Map<String, List<String>> posTags = new HashMap<>();
 		posTags.put("VERB", Arrays.asList("VB", "VBD", "VBG", "VBN", "VBP", "VBZ"));
@@ -127,15 +128,14 @@ public class Text {
 		String sen;
 		String wordArr[] = null;
 		try {
-			sen = posTaggerObj.builtPOS(sentence);
+			sen = posTaggerObj.builtPOS(sentence.getOriginalSentence());
 			StringTokenizer st = new StringTokenizer(sen, " ");
 			wordArr = new String[st.countTokens()];
 			wordArr = sen.split("([.,!?:;'\"-]|\\s)+");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-		Map<String, Integer> frequencyPos = new HashMap<>();
+		Map<String, Float> frequencyPos = new HashMap<>();
 		int i = 0;
 		while (i < wordArr.length) {
 			for (Map.Entry<String, List<String>> posTag : posTags.entrySet()) {
@@ -143,10 +143,10 @@ public class Text {
 				while (j < posTag.getValue().size()) {
 					if (wordArr[i].substring(wordArr[i].lastIndexOf("_") + 1).equals(posTag.getValue().get(j))) {
 						if (frequencyPos.get(posTag.getKey()) != null) {
-							int n = frequencyPos.get(posTag.getKey());
-							frequencyPos.put(posTag.getKey(), ++n);
+							float n = frequencyPos.get(posTag.getKey());
+							frequencyPos.put(posTag.getKey(), ++n / sentence.getLengthByWords());
 						} else {
-							frequencyPos.put(posTag.getKey(), 1);
+							frequencyPos.put(posTag.getKey(), (float) 1 / sentence.getLengthByWords());
 						}
 					}
 					j++;
@@ -157,4 +157,31 @@ public class Text {
 		return frequencyPos;
 	}
 
+	public Map<Character, Float> findPunctuationFrequency(Sentence sentence) {
+
+		List<Character> punc = new ArrayList<>();
+		punc.add('!');
+		punc.add(',');
+		punc.add('.');
+		punc.add('?');
+		punc.add('-');
+		punc.add(';');
+
+		Map<Character, Float> frequencyPun = new HashMap<>();
+		int charCounter = 0;
+		for (Character ch : sentence.getOriginalSentence().toCharArray()) {
+			charCounter++;
+			for (Character pu : punc) {
+				if (ch.equals(pu)) {
+					if (frequencyPun.get(pu) != null) {
+						float n = frequencyPun.get(pu);
+						frequencyPun.put(pu, ++n / sentence.getLengthByWords());
+					} else {
+						frequencyPun.put(pu, (float) 1 / sentence.getLengthByWords());
+					}
+				}
+			}
+		}
+		return frequencyPun;
+	}
 }
