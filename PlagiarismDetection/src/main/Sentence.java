@@ -13,7 +13,7 @@ public class Sentence {
 	float char1_Mean, char1_5, char1_95;
 	float char3_Mean, char3_5, char3_95;
 	float char4_Mean, char4_5, char4_95;
-	Map<String, Float> num_punctuation = new HashMap<String, Float>();
+	Map<Character, Float> num_punctuation = new HashMap<Character, Float>();
 	Map<String, Float> num_POS = new HashMap<String, Float>();
 	String originalSentence;
 	List<String> words;
@@ -138,11 +138,11 @@ public class Sentence {
 		this.char4_95 = char4_95;
 	}
 
-	public Map<String, Float> getNum_punctuation() {
+	public Map<Character, Float> getNum_punctuation() {
 		return num_punctuation;
 	}
 
-	public void setNum_punctuation(Map<String, Float> num_punctuation) {
+	public void setNum_punctuation(Map<Character, Float> num_punctuation) {
 		this.num_punctuation = num_punctuation;
 	}
 
