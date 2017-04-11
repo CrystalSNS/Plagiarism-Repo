@@ -68,7 +68,7 @@ public class Text {
 			Sentence sentence = new Sentence();
 			i++;
 			// SentenceUtils not Sentence
-			String sentenceString = SentenceUtils.listToString(sen);
+			String sentenceString = SentenceUtils.listToString(sen); // problem with "" ()
 			sentence.setOriginalSentence(sentenceString);
 			sentence.setId(i);
 			sentenceList.add(sentence);
@@ -76,11 +76,11 @@ public class Text {
 		return sentenceList;
 	}
 
-	public String[] splitToWords(String sentence) {
+	public String[] splitToWords(String str) {
 
-		StringTokenizer st = new StringTokenizer(sentence, " ");
+		StringTokenizer st = new StringTokenizer(str, " ");
 		String wordArr[] = new String[st.countTokens()];
-		wordArr = sentence.split("([.,!?:;'\"-]|\\s)+");
+		wordArr = str.split("([(.),!?:;'\"-]|\\s)+");
 
 		return wordArr;
 	}

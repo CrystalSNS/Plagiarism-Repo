@@ -1,10 +1,11 @@
 package main;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.Map.Entry;
 
 import tagger.POS_tagger;
 
@@ -24,37 +25,12 @@ public class Features {
 		posTags.put("PRT", Arrays.asList("RP"));
 	}
 
-	public float findRelationalFrequencyOfWord(Integer numMostWordDoc, Integer numWordDoc, Integer numWordSent) {
+	Text text = new Text();
+	
+	public Map<String, Integer> findWordFrequency(String str) {
 
-		return (float) Math.log(numMostWordDoc / (numWordDoc - numWordSent + 1));
-	}
-
-	public float findMean(float[] setOfValue) {
-		double sum = 0;
-		for (int i = 0; i < setOfValue.length; i++) {
-			sum += setOfValue[i];
-		}
-		return (float) (sum / setOfValue.length);
-	}
-
-	public float find5Percent(float[] setOfValue) {
-		double sum = 0;
-		for (int i = 0; i < setOfValue.length; i++) {
-			sum += setOfValue[i];
-		}
-		return (float) (sum * 5 / 100);
-	}
-
-	public float find95Percent(float[] setOfValue) {
-		double sum = 0;
-		for (int i = 0; i < setOfValue.length; i++) {
-			sum += setOfValue[i];
-		}
-		return (float) (sum * 95 / 100);
-	}
-
-	public Map<String, Integer> findWordFrequency(String wordArr[]) {
-
+		String wordArr[] = text.splitToWords(str);
+		
 		Map<String, Integer> frequencyWord = new HashMap<>();
 
 		int i = 0;
@@ -70,6 +46,26 @@ public class Features {
 		return frequencyWord;
 	}
 
+	public Sentence findRelationalFrequency(Map<String, Integer> wordFreInDoc, String sentence) {
+
+		Map<String, Integer> wordFreInSent = findWordFrequency(sentence);
+		float vdw, vds = 0;
+		int ndw = 0;
+
+		int maxNdw = (Collections.max(wordFreInDoc.values()));
+		for (Entry<String, Integer> word : wordFreInSent.entrySet()) {
+			ndw = wordFreInDoc.get(word.getKey());
+			vdw = (float) Math.log(maxNdw / ((ndw - word.getValue()) + 1));
+			vds = vds + vdw;
+		}
+		Sentence sentenceObj = new Sentence();
+		sentenceObj.setWord_5(vds * 5 / 100);
+		sentenceObj.setWord_95(vds * 95 / 100);
+		sentenceObj.setWord_Mean(vds / wordFreInDoc.size());
+
+		return sentenceObj;
+	}
+
 	public Map<String, Float> findPOSFrequency(Sentence sentence) {
 
 		POS_tagger posTaggerObj = new POS_tagger();
@@ -77,9 +73,7 @@ public class Features {
 		String wordArr[] = null;
 		try {
 			sen = posTaggerObj.builtPOS(sentence.getOriginalSentence());
-			StringTokenizer st = new StringTokenizer(sen, " ");
-			wordArr = new String[st.countTokens()];
-			wordArr = sen.split("([.,!?:;'\"-]|\\s)+");
+			wordArr = text.splitToWords(sen);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -112,7 +106,7 @@ public class Features {
 		Map<Character, Float> frequencyPun = new HashMap<>();
 		int charCounter = 0;
 		for (Character ch : sentence.getOriginalSentence().toCharArray()) {
-			
+
 			if (!(ch == ' ')) {
 				charCounter++;
 				if (!(ch >= 'a' && ch <= 'z')) {
