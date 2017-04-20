@@ -7,10 +7,14 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.lucene.analysis.ngram.NGramTokenizer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.SentenceUtils;
@@ -49,6 +53,7 @@ public class Text {
 			Document document = new Document();
 			i++;
 			String paragraph = matcher.group();
+
 			document.setOriginalDoc(paragraph.toLowerCase());
 			document.setId(i);
 			documents.add(document);
@@ -59,6 +64,9 @@ public class Text {
 
 	public List<Sentence> splitToSentences(String paragraph) {
 
+		// problem with "" ()
+		paragraph = paragraph.replaceAll("[\\(\\)]", "");
+
 		Reader reader = new StringReader(paragraph);
 		DocumentPreprocessor dp = new DocumentPreprocessor(reader);
 		List<Sentence> sentenceList = new ArrayList<Sentence>();
@@ -68,7 +76,7 @@ public class Text {
 			Sentence sentence = new Sentence();
 			i++;
 			// SentenceUtils not Sentence
-			String sentenceString = SentenceUtils.listToString(sen); // problem with "" ()
+			String sentenceString = SentenceUtils.listToString(sen);
 			sentence.setOriginalSentence(sentenceString);
 			sentence.setId(i);
 			sentenceList.add(sentence);
@@ -85,4 +93,42 @@ public class Text {
 		return wordArr;
 	}
 
+	public List<String[]> splitToChar(String str) throws IOException {
+
+		str = str.replaceAll("[ \\\n]", "");
+		StringReader stringReader = new StringReader(str);
+		NGramTokenizer tokenizer = new NGramTokenizer(3, 4);
+		List<String[]> allCharGramLists = new ArrayList<>();
+		List<String> trigram = new ArrayList<>();
+		List<String> fourgram = new ArrayList<>();
+		tokenizer.setReader(stringReader);
+		List<String> unigram = new ArrayList<String>(Arrays.asList(str.split("")));
+		tokenizer.reset();
+		CharTermAttribute termAtt = tokenizer.getAttribute(CharTermAttribute.class);
+		while (tokenizer.incrementToken()) {
+			String tok = termAtt.toString();
+			if (tok.length() == 3) {
+				trigram.add(tok);
+			} else {
+				fourgram.add(tok);
+			}
+		}
+		String[] stockArr = new String[unigram.size()];
+		stockArr = unigram.toArray(stockArr);
+		allCharGramLists.add(stockArr);
+
+		stockArr = new String[trigram.size()];
+		stockArr = trigram.toArray(stockArr);
+		allCharGramLists.add(stockArr);
+
+		stockArr = new String[fourgram.size()];
+		stockArr = fourgram.toArray(stockArr);
+		allCharGramLists.add(stockArr);
+
+		tokenizer.end();
+		tokenizer.close();
+
+		return allCharGramLists;
+
+	}
 }

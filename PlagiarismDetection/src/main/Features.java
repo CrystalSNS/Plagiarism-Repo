@@ -1,5 +1,6 @@
 package main;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,11 +27,9 @@ public class Features {
 	}
 
 	Text text = new Text();
-	
-	public Map<String, Integer> findWordFrequency(String str) {
 
-		String wordArr[] = text.splitToWords(str);
-		
+	public Map<String, Integer> findWordFrequency(String wordArr[]) {
+
 		Map<String, Integer> frequencyWord = new HashMap<>();
 
 		int i = 0;
@@ -46,24 +45,53 @@ public class Features {
 		return frequencyWord;
 	}
 
-	public Sentence findRelationalFrequency(Map<String, Integer> wordFreInDoc, String sentence) {
-
-		Map<String, Integer> wordFreInSent = findWordFrequency(sentence);
-		float vdw, vds = 0;
-		int ndw = 0;
-
-		int maxNdw = (Collections.max(wordFreInDoc.values()));
-		for (Entry<String, Integer> word : wordFreInSent.entrySet()) {
-			ndw = wordFreInDoc.get(word.getKey());
-			vdw = (float) Math.log(maxNdw / ((ndw - word.getValue()) + 1));
-			vds = vds + vdw;
-		}
+	public Sentence findRelationalFrequency(String doc, String sentence) throws IOException {
+		String wordArr[] = text.splitToWords(sentence);
+		Map<String, Integer> wordFreInSent = findWordFrequency(wordArr);
+		wordArr = text.splitToWords(doc);
+		Map<String, Integer> wordFreInDoc = findWordFrequency(wordArr);
+		float vds = calculateRelationalFrequency(wordFreInDoc, wordFreInSent);
 		Sentence sentenceObj = new Sentence();
 		sentenceObj.setWord_5(vds * 5 / 100);
 		sentenceObj.setWord_95(vds * 95 / 100);
 		sentenceObj.setWord_Mean(vds / wordFreInDoc.size());
+		// Char 1 gram
+		List<String[]> allCharGramListsDoc = text.splitToChar(doc);
+		List<String[]> allCharGramListsSent = text.splitToChar(sentence);
+		wordFreInDoc = findWordFrequency(allCharGramListsDoc.get(0));
+		wordFreInSent = findWordFrequency(allCharGramListsSent.get(0));
+		vds = calculateRelationalFrequency(wordFreInDoc, wordFreInSent);
+		sentenceObj.setChar1_5((vds * 5 / 100));
+		sentenceObj.setChar1_95(vds * 95 / 100);
+		sentenceObj.setChar1_Mean(vds / wordFreInDoc.size());
+		// Char 3 gram
+		wordFreInDoc = findWordFrequency(allCharGramListsDoc.get(1));
+		wordFreInSent = findWordFrequency(allCharGramListsSent.get(1));
+		vds = calculateRelationalFrequency(wordFreInDoc, wordFreInSent);
+		sentenceObj.setChar3_5((vds * 5 / 100));
+		sentenceObj.setChar3_95(vds * 95 / 100);
+		sentenceObj.setChar3_Mean(vds / wordFreInDoc.size());
+		// Char 4 gram
+		wordFreInDoc = findWordFrequency(allCharGramListsDoc.get(2));
+		wordFreInSent = findWordFrequency(allCharGramListsSent.get(2));
+		vds = calculateRelationalFrequency(wordFreInDoc, wordFreInSent);
+		sentenceObj.setChar4_5((vds * 5 / 100));
+		sentenceObj.setChar4_95(vds * 95 / 100);
+		sentenceObj.setChar4_Mean(vds / wordFreInDoc.size());
 
 		return sentenceObj;
+	}
+
+	public float calculateRelationalFrequency(Map<String, Integer> wordFreInDoc, Map<String, Integer> wordFreInSent) {
+		int ndw = 0;
+		float vdw, vds = 0;
+		int maxNdw = (Collections.max(wordFreInDoc.values()));
+		for (Entry<String, Integer> word : wordFreInSent.entrySet()) {
+			if(wordFreInDoc.get(word.getKey()) != null) ndw = wordFreInDoc.get(word.getKey()); // problem some  trigram-chars doesn't exist in document
+			vdw = (float) Math.log(maxNdw / ((ndw - word.getValue()) + 1)); // problem a tri-gram char=1 in doc, =2 in sentence => /0
+			vds = vds + vdw;
+		}
+		return vds;
 	}
 
 	public Map<String, Float> findPOSFrequency(Sentence sentence) {

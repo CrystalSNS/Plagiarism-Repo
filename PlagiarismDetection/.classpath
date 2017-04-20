@@ -6,5 +6,7 @@
 	<classpathentry kind="lib" path="/Users/noch/Documents/workspace/stanford-postagger-2016-10-31/stanford-postagger-3.7.0-sources.jar"/>
 	<classpathentry kind="lib" path="/Users/noch/Documents/workspace/stanford-postagger-2016-10-31/stanford-postagger-3.7.0.jar"/>
 	<classpathentry kind="lib" path="/Users/noch/Documents/workspace/stanford-postagger-2016-10-31/stanford-postagger.jar"/>
+	<classpathentry kind="lib" path="/Users/noch/Downloads/lucene-6.5.0/core/lucene-core-6.5.0.jar"/>
+	<classpathentry kind="lib" path="/Users/noch/Downloads/lucene-6.5.0/analysis/common/lucene-analyzers-common-6.5.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
