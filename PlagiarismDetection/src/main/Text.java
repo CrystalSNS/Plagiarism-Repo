@@ -81,7 +81,6 @@ public class Text {
 			sb.append(token.toString());
 		}
 		tokenStream.close();
-		System.out.println(sb.toString());
 		return sb.toString();
 	}
 
@@ -98,7 +97,6 @@ public class Text {
 		for (List<HasWord> sen : dp) {
 			Sentence sentence = new Sentence();
 			i++;
-			// SentenceUtils not Sentence
 			String sentenceString = SentenceUtils.listToString(sen);
 			sentence.setOriginalSentence(sentenceString);
 			sentence.setId(i);
