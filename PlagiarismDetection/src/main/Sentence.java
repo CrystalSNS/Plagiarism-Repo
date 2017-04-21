@@ -1,7 +1,6 @@
 package main;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class Sentence {
@@ -16,7 +15,7 @@ public class Sentence {
 	Map<Character, Float> num_punctuation = new HashMap<Character, Float>();
 	Map<String, Float> num_POS = new HashMap<String, Float>();
 	String originalSentence;
-	List<String> words;
+	String noStopWordSentence;
 
 	public int getId() {
 		return id;
@@ -162,12 +161,12 @@ public class Sentence {
 		this.originalSentence = originalSentence;
 	}
 
-	public List<String> getWords() {
-		return words;
+	public String getNoStopWordSentence() {
+		return noStopWordSentence;
 	}
 
-	public void setWords(List<String> words) {
-		this.words = words;
+	public void setNoStopWordSentence(String noStopWordSentence) {
+		this.noStopWordSentence = noStopWordSentence;
 	}
 
 }

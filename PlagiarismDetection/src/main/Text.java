@@ -13,7 +13,11 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.core.StopFilter;
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.ngram.NGramTokenizer;
+import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 import edu.stanford.nlp.ling.HasWord;
@@ -53,13 +57,32 @@ public class Text {
 			Document document = new Document();
 			i++;
 			String paragraph = matcher.group();
-
 			document.setOriginalDoc(paragraph.toLowerCase());
 			document.setId(i);
 			documents.add(document);
-
 		}
 		return documents;
+	}
+
+	public String removeStopWords(String str) throws Exception {
+
+		StandardTokenizer stdToken = new StandardTokenizer();
+		stdToken.setReader(new StringReader(str));
+		TokenStream tokenStream;
+		tokenStream = new StopFilter(stdToken, EnglishAnalyzer.getDefaultStopSet());
+		tokenStream.reset();
+
+		StringBuilder sb = new StringBuilder();
+		CharTermAttribute token = tokenStream.getAttribute(CharTermAttribute.class);
+		while (tokenStream.incrementToken()) {
+			if (sb.length() > 0) {
+				sb.append(" ");
+			}
+			sb.append(token.toString());
+		}
+		tokenStream.close();
+		System.out.println(sb.toString());
+		return sb.toString();
 	}
 
 	public List<Sentence> splitToSentences(String paragraph) {
