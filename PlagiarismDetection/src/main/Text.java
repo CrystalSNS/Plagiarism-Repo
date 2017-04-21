@@ -52,13 +52,10 @@ public class Text {
 		List<Document> documents = new ArrayList<Document>();
 		Pattern pattern = Pattern.compile("(?:[^\n][\n]?)+", Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(textOrig);
-		int i = 0;
 		while (matcher.find()) {
 			Document document = new Document();
-			i++;
 			String paragraph = matcher.group();
 			document.setOriginalDoc(paragraph.toLowerCase());
-			document.setId(i);
 			documents.add(document);
 		}
 		return documents;
@@ -93,13 +90,10 @@ public class Text {
 		DocumentPreprocessor dp = new DocumentPreprocessor(reader);
 		List<Sentence> sentenceList = new ArrayList<Sentence>();
 
-		int i = 0;
 		for (List<HasWord> sen : dp) {
 			Sentence sentence = new Sentence();
-			i++;
 			String sentenceString = SentenceUtils.listToString(sen);
 			sentence.setOriginalSentence(sentenceString);
-			sentence.setId(i);
 			sentenceList.add(sentence);
 		}
 		return sentenceList;

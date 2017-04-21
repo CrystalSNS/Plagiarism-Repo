@@ -5,7 +5,6 @@ import java.util.Map;
 
 public class Sentence {
 
-	int id;
 	int lengthByWords;
 	int lengthByChar;
 	float word_Mean, word_5, word_95;
@@ -16,14 +15,6 @@ public class Sentence {
 	Map<String, Float> num_POS = new HashMap<String, Float>();
 	String originalSentence;
 	String noStopWordSentence;
-
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
 
 	public int getLengthByWords() {
 		return lengthByWords;

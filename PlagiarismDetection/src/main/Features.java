@@ -111,6 +111,7 @@ public class Features {
 
 		int ndw = 0;
 		float vdw, vds = 0;
+		//most frequency word
 		int maxNdw = (Collections.max(wordFreInDoc.values()));
 		for (Entry<String, Integer> word : wordFreInSent.entrySet()) {
 			if (wordFreInDoc.get(word.getKey()) != null){

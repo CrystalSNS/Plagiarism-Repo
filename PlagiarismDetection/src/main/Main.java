@@ -18,17 +18,14 @@ public class Main {
 				text = new Text();
 				Sentence sentObj = new Sentence();
 				sentObj.setOriginalSentence(sentenceList.get(j).getOriginalSentence());
-				sentObj.setId(sentenceList.get(j).getId());
 				sentObj = feat.findPOSFrequency(sentObj);
 				sentObj = feat.findPunctuationFrequency(sentObj);
 				sentObj = feat.findRelationalFrequency(documentsList.get(i).getOriginalDoc(), sentObj);
 				
 				sentenceListNew.add(sentObj);
-				System.out.println(1);
-
 			}
+			
 			documentsList.get(i).setSentencesInDoc(sentenceListNew);
 		}
-
 	}
 }
