@@ -150,7 +150,7 @@ public class Text {
 
 	}
 
-	public void writFeatureToTextFile(Sentence sentObj, boolean isLast, String pt) {
+	public void writFeatureToFile(Sentence sentObj, boolean isLast, String pt) {
 
 		PrintWriter pw = null;
 		try {
@@ -187,10 +187,10 @@ public class Text {
 			pw.print(pun.getValue() + "\t");
 		}
 
-		pw.print("\n\n");
+		pw.print("\n");
 
 		if (isLast)
-			pw.print("\n\n\n\n");
+			pw.print("\n\n");
 		
 		pw.close();
 	}

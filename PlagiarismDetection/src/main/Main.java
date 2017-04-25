@@ -28,7 +28,7 @@ public class Main {
 
 				sentenceListNew.add(sentObj);
 				
-				text.writFeatureToTextFile(sentObj, (j == sentenceList.size()-1), "/Users/noch/Desktop/test/test.text");
+				text.writFeatureToFile(sentObj, (j == sentenceList.size()-1), "/Users/noch/Desktop/test/test.csv");
 			}
 			documentsList.get(i).setSentencesInDoc(sentenceListNew);
 		}
