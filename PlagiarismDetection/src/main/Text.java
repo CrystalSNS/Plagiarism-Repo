@@ -3,12 +3,15 @@ package main;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -145,5 +148,50 @@ public class Text {
 
 		return allCharGramLists;
 
+	}
+
+	public void writFeatureToTextFile(Sentence sentObj, boolean isLast, String pt) {
+
+		PrintWriter pw = null;
+		try {
+			pw = new PrintWriter(new FileOutputStream(new File(pt), true));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		pw.print(sentObj.char1_Mean + "\t");
+		pw.print(sentObj.char1_5 + "\t");
+		pw.print(sentObj.char1_95 + "\t");
+
+		pw.print(sentObj.char3_Mean + "\t");
+		pw.print(sentObj.char3_5 + "\t");
+		pw.print(sentObj.char3_95 + "\t");
+
+		pw.print(sentObj.char4_Mean + "\t");
+		pw.print(sentObj.char4_5 + "\t");
+		pw.print(sentObj.char4_95 + "\t");
+
+		pw.print(sentObj.word_Mean + "\t");
+		pw.print(sentObj.word_5 + "\t");
+		pw.print(sentObj.word_95 + "\t");
+
+		pw.print(sentObj.lengthByWords + "\t");
+		pw.print(sentObj.lengthByChar + "\t");
+
+		for (Entry<String, Float> pos : sentObj.num_POS.entrySet()) {
+			pw.print(pos.getValue() + "\t");
+		}
+
+		for (Entry<Character, Float> pun : sentObj.num_punctuation.entrySet()) {
+			pw.print(pun.getValue() + "\t");
+		}
+
+		pw.print("\n\n");
+
+		if (isLast)
+			pw.print("\n\n\n\n");
+		
+		pw.close();
 	}
 }
