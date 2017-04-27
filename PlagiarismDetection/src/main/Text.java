@@ -3,9 +3,7 @@ package main;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -26,6 +24,11 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.SentenceUtils;
 import edu.stanford.nlp.process.DocumentPreprocessor;
+import weka.core.Attribute;
+import weka.core.DenseInstance;
+import weka.core.Instance;
+import weka.core.Instances;
+import weka.core.converters.ArffSaver;
 
 public class Text {
 
@@ -150,48 +153,88 @@ public class Text {
 
 	}
 
-	public void writFeatureToFile(Sentence sentObj, boolean isLast, String pt) {
+	public void writFeatureToFile(Document docObj, String pt) {
 
-		PrintWriter pw = null;
+		ArrayList<Attribute> atts = new ArrayList<Attribute>();
+		ArrayList<Instance> instanceList = new ArrayList<Instance>();
+		atts.add(new Attribute("c1_M", 0));
+		atts.add(new Attribute("c1_5", 1));
+		atts.add(new Attribute("c1_95", 2));
+		atts.add(new Attribute("c3_M", 3));
+		atts.add(new Attribute("c3_5", 4));
+		atts.add(new Attribute("c3_95", 5));
+		atts.add(new Attribute("c4_M", 6));
+		atts.add(new Attribute("c4_5", 7));
+		atts.add(new Attribute("c4_95", 8));
+		atts.add(new Attribute("w_M", 9));
+		atts.add(new Attribute("w_5", 10));
+		atts.add(new Attribute("w_95", 11));
+		atts.add(new Attribute("lw", 12));
+		atts.add(new Attribute("lc", 13));
+		atts.add(new Attribute("det", 14));
+		atts.add(new Attribute("adv", 15));
+		atts.add(new Attribute("prt", 16));
+		atts.add(new Attribute("pron", 17));
+		atts.add(new Attribute("verb", 18));
+		atts.add(new Attribute("adj", 19));
+		atts.add(new Attribute("conj", 20));
+		atts.add(new Attribute("num", 21));
+		atts.add(new Attribute("adp", 22));
+		atts.add(new Attribute("noun", 23));
+		atts.add(new Attribute("!", 24));
+		atts.add(new Attribute("semi", 25));
+		atts.add(new Attribute("+", 26));
+		atts.add(new Attribute(",", 27));
+		atts.add(new Attribute("-", 28));
+		atts.add(new Attribute(".", 29));
+		atts.add(new Attribute("?", 30));
+
+		for (Sentence sentObj : docObj.getSentencesInDoc()) {
+			Instance inst = new DenseInstance(31);
+
+			inst.setValue(atts.get(0), sentObj.char1_Mean);
+			inst.setValue(atts.get(1), sentObj.char1_5);
+			inst.setValue(atts.get(2), sentObj.char1_95);
+			inst.setValue(atts.get(3), sentObj.char3_Mean);
+			inst.setValue(atts.get(4), sentObj.char3_5);
+			inst.setValue(atts.get(5), sentObj.char3_95);
+			inst.setValue(atts.get(6), sentObj.char4_Mean);
+			inst.setValue(atts.get(7), sentObj.char4_5);
+			inst.setValue(atts.get(8), sentObj.char4_95);
+			inst.setValue(atts.get(9), sentObj.word_Mean);
+			inst.setValue(atts.get(10), sentObj.word_5);
+			inst.setValue(atts.get(11), sentObj.word_95);
+			inst.setValue(atts.get(12), sentObj.lengthByWords);
+			inst.setValue(atts.get(13), sentObj.lengthByChar);
+			int k = 14;
+			for (Entry<String, Float> pos : sentObj.num_POS.entrySet()) {
+				inst.setValue(atts.get(k), pos.getValue());
+				k++;
+			}
+			
+			int m = 25;
+			for (Entry<Character, Float> pun : sentObj.num_punctuation.entrySet()) {
+				inst.setValue(atts.get(m), pun.getValue());
+				m++;
+			}
+
+			instanceList.add(inst);
+		}
+
+		Instances newDataset = new Instances("Sentence", atts, instanceList.size());
+
+		for (Instance insts : instanceList)
+			newDataset.add(insts);
+
+		ArffSaver saver = new ArffSaver();
+		saver.setInstances(newDataset);
 		try {
-			pw = new PrintWriter(new FileOutputStream(new File(pt), true));
-		} catch (FileNotFoundException e) {
+			saver.setFile(new File(pt));
+			saver.writeBatch();
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		pw.print(sentObj.char1_Mean + "\t");
-		pw.print(sentObj.char1_5 + "\t");
-		pw.print(sentObj.char1_95 + "\t");
-
-		pw.print(sentObj.char3_Mean + "\t");
-		pw.print(sentObj.char3_5 + "\t");
-		pw.print(sentObj.char3_95 + "\t");
-
-		pw.print(sentObj.char4_Mean + "\t");
-		pw.print(sentObj.char4_5 + "\t");
-		pw.print(sentObj.char4_95 + "\t");
-
-		pw.print(sentObj.word_Mean + "\t");
-		pw.print(sentObj.word_5 + "\t");
-		pw.print(sentObj.word_95 + "\t");
-
-		pw.print(sentObj.lengthByWords + "\t");
-		pw.print(sentObj.lengthByChar + "\t");
-
-		for (Entry<String, Float> pos : sentObj.num_POS.entrySet()) {
-			pw.print(pos.getValue() + "\t");
-		}
-
-		for (Entry<Character, Float> pun : sentObj.num_punctuation.entrySet()) {
-			pw.print(pun.getValue() + "\t");
-		}
-
-		pw.print("\n");
-
-		if (isLast)
-			pw.print("\n\n");
-		
-		pw.close();
 	}
+
 }
