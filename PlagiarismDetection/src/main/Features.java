@@ -2,6 +2,7 @@ package main;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -119,7 +120,10 @@ public class Features {
 				ndw = wordFreInDoc.get(word.getKey());
 			}
 			// problem some trigram-chars doesn't exist in document
-			vdw = (float) Math.log(maxNdw / ((ndw - word.getValue()) + 1));
+			int n = ndw - word.getValue() + 1;
+			if (n <= 0)
+				n = 1;
+			vdw = (float) Math.log(maxNdw / n);
 			// problem a tri-gram char=1 in doc, =2 in sentence => /0
 			vds = vds + vdw;
 		}
@@ -209,4 +213,50 @@ public class Features {
 		bd = bd.setScale(places, RoundingMode.HALF_UP);
 		return bd.floatValue();
 	}
+
+	public DocumentCl setFeatureToSentence(DocumentCl document, Boolean isPlagi) {
+		Text text = new Text();
+		List<Sentence> sentenceListNew = new ArrayList<>();
+		Features feat = new Features();
+		if (isPlagi) {
+			for (Entry<Integer, String> passage : document.getPassageLable().entrySet()) {
+				List<Sentence> sentenceList = text.splitToSentences(passage.getValue());
+
+				for (int j = 0; j < sentenceList.size(); j++) {
+
+					Sentence sentObj = new Sentence();
+					sentObj.setOriginalSentence(sentenceList.get(j).getOriginalSentence());
+					sentObj = feat.findPOSFrequency(sentObj);
+					sentObj = feat.findPunctuationFrequency(sentObj);
+					sentObj = feat.findRelationalFrequency(document.getOriginalDoc(), sentObj);
+
+					if (passage.getKey() % 2 != 0) {
+						sentObj.setY(0);
+					} else
+						sentObj.setY(1);
+					sentenceListNew.add(sentObj);
+				}
+			}
+		} else {
+
+			List<Sentence> sentenceList = text.splitToSentences(document.originalDoc);
+
+			for (int j = 0; j < sentenceList.size(); j++) {
+
+				Sentence sentObj = new Sentence();
+				sentObj.setOriginalSentence(sentenceList.get(j).getOriginalSentence());
+				sentObj = feat.findPOSFrequency(sentObj);
+				sentObj = feat.findPunctuationFrequency(sentObj);
+				sentObj = feat.findRelationalFrequency(document.getOriginalDoc(), sentObj);
+				sentObj.setY(0);
+
+				sentenceListNew.add(sentObj);
+			}
+		}
+
+		document.setSentencesInDoc(sentenceListNew);
+
+		return document;
+	}
+
 }

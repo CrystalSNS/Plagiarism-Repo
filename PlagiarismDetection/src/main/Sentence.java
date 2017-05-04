@@ -11,6 +11,7 @@ public class Sentence {
 	float char1_Mean, char1_5, char1_95;
 	float char3_Mean, char3_5, char3_95;
 	float char4_Mean, char4_5, char4_95;
+	int y ;
 	
 	Map<Character, Float> num_punctuation = new HashMap<Character, Float>();
 	Map<String, Float> num_POS = new HashMap<String, Float>();
@@ -159,6 +160,14 @@ public class Sentence {
 
 	public void setNoStopWordSentence(String noStopWordSentence) {
 		this.noStopWordSentence = noStopWordSentence;
+	}
+
+	public Integer getY() {
+		return y;
+	}
+
+	public void setY(Integer y) {
+		this.y = y;
 	}
 
 }

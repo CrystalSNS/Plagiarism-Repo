@@ -9,10 +9,15 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.StopFilter;
@@ -20,6 +25,9 @@ import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.ngram.NGramTokenizer;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.SentenceUtils;
@@ -50,16 +58,16 @@ public class Text {
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 		}
-		return str;
+		return str.toLowerCase();
 	}
 
-	public List<Document> splitToParagraphes(String textOrig) {
+	public List<DocumentCl> splitToParagraphes(String textOrig) {
 
-		List<Document> documents = new ArrayList<Document>();
+		List<DocumentCl> documents = new ArrayList<DocumentCl>();
 		Pattern pattern = Pattern.compile("(?:[^\n][\n]?)+", Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(textOrig);
 		while (matcher.find()) {
-			Document document = new Document();
+			DocumentCl document = new DocumentCl();
 			String paragraph = matcher.group();
 			document.setOriginalDoc(paragraph.toLowerCase());
 			documents.add(document);
@@ -153,7 +161,110 @@ public class Text {
 
 	}
 
-	public void writFeatureToFile(Document docObj, String pt) {
+	public Map<Integer, Integer> getOffSetPlagiList(String pt) {
+		Map<Integer, Integer> offsetLenghtPla = new TreeMap<Integer, Integer>();
+		try {
+			File fXmlFile = new File(pt);
+			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+			Document doc = dBuilder.parse(fXmlFile);
+			doc.getDocumentElement().normalize();
+			NodeList nList = doc.getElementsByTagName("feature");
+			for (int temp = 0; temp < nList.getLength(); temp++) {
+				Node nNode = nList.item(temp);
+				if (nNode.getAttributes().getNamedItem("name").getNodeValue().equals("plagiarism")) {
+					offsetLenghtPla.put(
+							Integer.valueOf(nNode.getAttributes().getNamedItem("this_offset").getNodeValue()),
+							Integer.valueOf(nNode.getAttributes().getNamedItem("this_length").getNodeValue()));
+				}
+
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return offsetLenghtPla;
+	}
+
+	public DocumentCl setLableToPassage(DocumentCl document) {
+
+		Map<Integer, String> passageLable = new TreeMap<Integer, String>();
+		int begin = 0;
+		int end = 0, m = 0;
+
+		for (Entry<Integer, Integer> offs : document.offsetLenghtPla.entrySet()) {
+
+			m++;
+			if (begin != offs.getKey()) {
+				// if plagiarism offset is just right next after each other
+				end = offs.getKey() - 1;
+				passageLable.put(m, document.getOriginalDoc().substring(begin, end));
+			}
+
+			m++;
+			begin = offs.getKey();
+			end = begin + offs.getValue();
+			passageLable.put(m, document.getOriginalDoc().substring(begin, end));
+
+			begin = end + 1;
+
+		}
+		if (end < document.getOriginalDoc().length() && (document.getOriginalDoc().length() - end) >= 10) {
+			// get the last passage which is not plagiarism
+			m++;
+			passageLable.put(m, document.getOriginalDoc().substring(end + 1, document.getOriginalDoc().length()));
+		}
+
+		document.setPassageLable(passageLable);
+		return document;
+	}
+
+	public void extractTextAndGroundTruth(String pt) {
+		File folder = new File(pt);
+		File[] listOfPart = folder.listFiles();
+		for (int i = 0; i < listOfPart.length; i++) {
+			if (listOfPart[i].isDirectory()) {
+				File file = new File(pt + "/" + listOfPart[i].getName());
+				File[] listOfFile = file.listFiles();
+				if (listOfFile.length != 0) {
+					DocumentCl document = new DocumentCl();
+					for (int j = 0; j < listOfFile.length; j++) {
+						boolean isPlagi = true;
+						if (listOfFile[j].isFile() && listOfFile[j].getName().endsWith(".txt")) {
+							document.setOriginalDoc(
+									readTextFile(pt + "/" + listOfPart[i].getName() + "/" + listOfFile[j].getName()));
+						}
+						if (listOfFile[j].isFile() && listOfFile[j].getName().endsWith(".xml")) {
+
+							document.setOffsetLenghtPla(getOffSetPlagiList(
+									pt + "/" + listOfPart[i].getName() + "/" + listOfFile[j].getName()));
+
+							if (document.getOffsetLenghtPla().isEmpty()) {
+								isPlagi = false;
+							}
+						}
+
+						if (!document.getOffsetLenghtPla().isEmpty() || !isPlagi) {
+							Features feat = new Features();
+							if (isPlagi) {
+								document = feat.setFeatureToSentence(setLableToPassage(document), isPlagi);
+
+							} else {
+								document = feat.setFeatureToSentence(document, isPlagi);
+							}
+							String fileName = listOfFile[j].getName().substring(0, listOfFile[j].getName().length() - 4)
+									+ ".arff";
+							writFeatureToFile(document, "result" + "/" + listOfPart[i].getName() + "/" + fileName);
+
+							document = new DocumentCl();
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public void writFeatureToFile(DocumentCl docObj, String pt) {
 
 		ArrayList<Attribute> atts = new ArrayList<Attribute>();
 		ArrayList<Instance> instanceList = new ArrayList<Instance>();
@@ -188,6 +299,7 @@ public class Text {
 		atts.add(new Attribute("-", 28));
 		atts.add(new Attribute(".", 29));
 		atts.add(new Attribute("?", 30));
+		atts.add(new Attribute("y", 31));
 
 		for (Sentence sentObj : docObj.getSentencesInDoc()) {
 			Instance inst = new DenseInstance(31);
@@ -211,13 +323,16 @@ public class Text {
 				inst.setValue(atts.get(k), pos.getValue());
 				k++;
 			}
-			
-			int m = 25;
+
+			int m = k;
+
 			for (Entry<Character, Float> pun : sentObj.num_punctuation.entrySet()) {
 				inst.setValue(atts.get(m), pun.getValue());
+
 				m++;
 			}
 
+			inst.setValue(atts.get(30), sentObj.y);
 			instanceList.add(inst);
 		}
 
@@ -231,6 +346,7 @@ public class Text {
 		try {
 			saver.setFile(new File(pt));
 			saver.writeBatch();
+			System.out.println("Save");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
