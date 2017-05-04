@@ -294,12 +294,11 @@ public class Text {
 		atts.add(new Attribute("noun", 23));
 		atts.add(new Attribute("!", 24));
 		atts.add(new Attribute("semi", 25));
-		atts.add(new Attribute("+", 26));
-		atts.add(new Attribute(",", 27));
-		atts.add(new Attribute("-", 28));
-		atts.add(new Attribute(".", 29));
-		atts.add(new Attribute("?", 30));
-		atts.add(new Attribute("y", 31));
+		atts.add(new Attribute(",", 26));
+		atts.add(new Attribute("-", 27));
+		atts.add(new Attribute(".", 28));
+		atts.add(new Attribute("?", 29));
+		atts.add(new Attribute("y", 30));
 
 		for (Sentence sentObj : docObj.getSentencesInDoc()) {
 			Instance inst = new DenseInstance(31);
@@ -318,21 +317,19 @@ public class Text {
 			inst.setValue(atts.get(11), sentObj.word_95);
 			inst.setValue(atts.get(12), sentObj.lengthByWords);
 			inst.setValue(atts.get(13), sentObj.lengthByChar);
-			int k = 14;
+			
+			int k = 13;
 			for (Entry<String, Float> pos : sentObj.num_POS.entrySet()) {
+				k ++;
 				inst.setValue(atts.get(k), pos.getValue());
-				k++;
 			}
-
-			int m = k;
 
 			for (Entry<Character, Float> pun : sentObj.num_punctuation.entrySet()) {
-				inst.setValue(atts.get(m), pun.getValue());
-
-				m++;
+				k ++;
+				inst.setValue(atts.get(k), pun.getValue());
 			}
-
-			inst.setValue(atts.get(30), sentObj.y);
+			k++;
+			inst.setValue(atts.get(k), sentObj.y);
 			instanceList.add(inst);
 		}
 
