@@ -31,8 +31,6 @@ public class Features {
 		posTags.put("PRT", Arrays.asList("RP"));
 	}
 
-	Text text = new Text();
-
 	public Map<String, Integer> findWordFrequency(String wordArr[]) {
 
 		Map<String, Integer> frequencyWord = new HashMap<>();
@@ -196,58 +194,57 @@ public class Features {
 		return bd.floatValue();
 	}
 
-	public DocumentCl setFeatureToSentence(DocumentCl document, Boolean isPlagi) {
+	public DocumentCl setFeatureToSentence(DocumentCl document, Integer isPlagi) {
+
 		Text text = new Text();
 		List<Sentence> sentenceListNew = new ArrayList<>();
-		Features feat = new Features();
-		if (isPlagi) {
+		Sentence sentObj = null;
+
+		if (isPlagi == 1) {
 			for (Entry<Integer, String> passage : document.getPassageLable().entrySet()) {
 				List<Sentence> sentenceList = text.splitToSentences(passage.getValue());
-
 				for (int j = 0; j < sentenceList.size(); j++) {
-
-					Sentence sentObj = new Sentence();
+					sentObj = new Sentence();
 					sentObj.setOriginalSentence(sentenceList.get(j).getOriginalSentence());
-
-					try {
-						sentObj.setNoStopWordSentence(text.removeStopWords(sentObj.getOriginalSentence()));
-						sentObj.setAllCharGramListsInSent(text.splitToChar(sentObj.getNoStopWordSentence()));
-
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-					sentObj.setWordArrInSent(text.splitToWords(sentObj.getNoStopWordSentence()));
-					sentObj = feat.findPOSFrequency(sentObj);
-					sentObj = feat.findPunctuationFrequency(sentObj);
-					sentObj = feat.findRelationalFrequency(document, sentObj);
-
 					if (passage.getKey() % 2 != 0) {
-						sentObj.setY(0);
-					} else
-						sentObj.setY(1);
+						isPlagi = 0;
+					} else {
+						isPlagi = 1;
+					}
+					sentObj = constructFeature(document, sentObj, isPlagi);
 					sentenceListNew.add(sentObj);
 				}
 			}
 		} else {
-
 			List<Sentence> sentenceList = text.splitToSentences(document.originalDoc);
-
 			for (int j = 0; j < sentenceList.size(); j++) {
-
-				Sentence sentObj = new Sentence();
+				sentObj = new Sentence();
 				sentObj.setOriginalSentence(sentenceList.get(j).getOriginalSentence());
-				sentObj = feat.findPOSFrequency(sentObj);
-				sentObj = feat.findPunctuationFrequency(sentObj);
-				sentObj = feat.findRelationalFrequency(document, sentObj);
-				sentObj.setY(0);
-
+				sentObj = constructFeature(document, sentObj, isPlagi);
 				sentenceListNew.add(sentObj);
 			}
 		}
-
 		document.setSentencesInDoc(sentenceListNew);
 
+		System.out.println("All sentences in doc:" + document.getSentencesInDoc().size());
+
 		return document;
+	}
+
+	public Sentence constructFeature(DocumentCl document, Sentence sentObj, Integer isPlagi) {
+		Text text = new Text();
+		try {
+			sentObj.setNoStopWordSentence(text.removeStopWords(sentObj.getOriginalSentence()));
+			sentObj.setAllCharGramListsInSent(text.splitToChar(sentObj.getNoStopWordSentence()));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		sentObj.setWordArrInSent(text.splitToWords(sentObj.getNoStopWordSentence()));
+		sentObj = findPOSFrequency(sentObj);
+		sentObj = findPunctuationFrequency(sentObj);
+		sentObj = findRelationalFrequency(document, sentObj);
+		sentObj.setY(isPlagi);
+		return sentObj;
 	}
 
 }

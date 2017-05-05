@@ -258,10 +258,10 @@ public class Text {
 
 						if (!document.getOffsetLenghtPla().isEmpty() || !isPlagi) {
 							if (isPlagi) {
-								document = feat.setFeatureToSentence(setLableToPassage(document), isPlagi);
+								document = feat.setFeatureToSentence(setLableToPassage(document), 1);
 
 							} else {
-								document = feat.setFeatureToSentence(document, isPlagi);
+								document = feat.setFeatureToSentence(document, 0);
 							}
 							String fileName = listOfFile[j].getName().substring(0, listOfFile[j].getName().length() - 4) + ".arff";
 							writFeatureToFile(document, "result" + "/" + listOfPart[i].getName() + "/" + fileName);
