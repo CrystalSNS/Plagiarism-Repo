@@ -1,16 +1,19 @@
 package main;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Sentence {
 
 	int lengthByWords;
 	int lengthByChar;
+	String wordArrInSent[];
 	float word_Mean, word_5, word_95;
 	float char1_Mean, char1_5, char1_95;
 	float char3_Mean, char3_5, char3_95;
 	float char4_Mean, char4_5, char4_95;
+	List<String[]> allCharGramListsInSent;
 	int y ;
 	
 	Map<Character, Float> num_punctuation = new HashMap<Character, Float>();
@@ -32,6 +35,14 @@ public class Sentence {
 
 	public void setLengthByChar(int lengthByChar) {
 		this.lengthByChar = lengthByChar;
+	}
+
+	public String[] getWordArrInSent() {
+		return wordArrInSent;
+	}
+
+	public void setWordArrInSent(String[] wordArrInSent) {
+		this.wordArrInSent = wordArrInSent;
 	}
 
 	public float getWord_Mean() {
@@ -160,6 +171,14 @@ public class Sentence {
 
 	public void setNoStopWordSentence(String noStopWordSentence) {
 		this.noStopWordSentence = noStopWordSentence;
+	}
+
+	public List<String[]> getAllCharGramListsInSent() {
+		return allCharGramListsInSent;
+	}
+
+	public void setAllCharGramListsInSent(List<String[]> allCharGramListsInSent) {
+		this.allCharGramListsInSent = allCharGramListsInSent;
 	}
 
 	public Integer getY() {

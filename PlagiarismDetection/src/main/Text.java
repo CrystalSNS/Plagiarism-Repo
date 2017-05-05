@@ -226,18 +226,30 @@ public class Text {
 			if (listOfPart[i].isDirectory()) {
 				File file = new File(pt + "/" + listOfPart[i].getName());
 				File[] listOfFile = file.listFiles();
+				Features feat = new Features();
+				
 				if (listOfFile.length != 0) {
 					DocumentCl document = new DocumentCl();
 					for (int j = 0; j < listOfFile.length; j++) {
 						boolean isPlagi = true;
 						if (listOfFile[j].isFile() && listOfFile[j].getName().endsWith(".txt")) {
-							document.setOriginalDoc(
-									readTextFile(pt + "/" + listOfPart[i].getName() + "/" + listOfFile[j].getName()));
+							
+							document.setOriginalDoc(readTextFile(pt + "/" + listOfPart[i].getName() + "/" + listOfFile[j].getName()));
+							try {
+								document.setNoStopWordDoc(removeStopWords(document.getOriginalDoc()));
+								document.setWordArrInDoc(splitToWords(document.getNoStopWordDoc()));
+								document.setAllCharGramListsInDoc(splitToChar(document.getNoStopWordDoc()));
+								document.setWordFrequenInDoc(feat.findWordFrequency(document.getWordArrInDoc()));
+								document.setChar1FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(0)));
+								document.setChar3FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(1)));
+								document.setChar4FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(2)));
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
 						}
 						if (listOfFile[j].isFile() && listOfFile[j].getName().endsWith(".xml")) {
 
-							document.setOffsetLenghtPla(getOffSetPlagiList(
-									pt + "/" + listOfPart[i].getName() + "/" + listOfFile[j].getName()));
+							document.setOffsetLenghtPla(getOffSetPlagiList(pt + "/" + listOfPart[i].getName() + "/" + listOfFile[j].getName()));
 
 							if (document.getOffsetLenghtPla().isEmpty()) {
 								isPlagi = false;
@@ -245,15 +257,13 @@ public class Text {
 						}
 
 						if (!document.getOffsetLenghtPla().isEmpty() || !isPlagi) {
-							Features feat = new Features();
 							if (isPlagi) {
 								document = feat.setFeatureToSentence(setLableToPassage(document), isPlagi);
 
 							} else {
 								document = feat.setFeatureToSentence(document, isPlagi);
 							}
-							String fileName = listOfFile[j].getName().substring(0, listOfFile[j].getName().length() - 4)
-									+ ".arff";
+							String fileName = listOfFile[j].getName().substring(0, listOfFile[j].getName().length() - 4) + ".arff";
 							writFeatureToFile(document, "result" + "/" + listOfPart[i].getName() + "/" + fileName);
 
 							document = new DocumentCl();
@@ -345,7 +355,6 @@ public class Text {
 			saver.writeBatch();
 			System.out.println("Save");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

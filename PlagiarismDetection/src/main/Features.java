@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.StringTokenizer;
 
 import tagger.POS_tagger;
 
@@ -49,62 +50,41 @@ public class Features {
 		return frequencyWord;
 	}
 
-	public Sentence findRelationalFrequency(String doc, Sentence sentenceObj) {
+	public Sentence findRelationalFrequency(DocumentCl doc, Sentence sentenceObj) {
 
-		String noStopWordDoc = null;
-		String wordArr[] = null;
-		List<String[]> allCharGramListsDoc = null;
-		List<String[]> allCharGramListsSent = null;
+		Map<String, Integer> wordFreInSent = findWordFrequency(sentenceObj.getWordArrInSent());
 
-		try {
-			noStopWordDoc = text.removeStopWords(doc);
-			wordArr = text.splitToWords(noStopWordDoc);
-			allCharGramListsDoc = text.splitToChar(noStopWordDoc);
-			allCharGramListsSent = text.splitToChar(sentenceObj.noStopWordSentence);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		Map<String, Integer> wordFreInDoc = findWordFrequency(wordArr);
-
-		wordArr = text.splitToWords(sentenceObj.noStopWordSentence);
-		Map<String, Integer> wordFreInSent = findWordFrequency(wordArr);
-
-		float vds = calculateRelationalFrequency(wordFreInDoc, wordFreInSent);
+		float vds = calculateRelationalFrequency(doc.getWordFrequenInDoc(), wordFreInSent);
 
 		sentenceObj.setWord_5(round((float) (vds * 0.05)));
 		sentenceObj.setWord_95(round((float) (vds * 0.95)));
-		sentenceObj.setWord_Mean(round(vds / wordFreInDoc.size()));
+		sentenceObj.setWord_Mean(round(vds / doc.getWordFrequenInDoc().size()));
 
 		// Char 1 gram
-		wordFreInDoc = findWordFrequency(allCharGramListsDoc.get(0));
-		wordFreInSent = findWordFrequency(allCharGramListsSent.get(0));
+		wordFreInSent = findWordFrequency(sentenceObj.getAllCharGramListsInSent().get(0));
 
-		vds = calculateRelationalFrequency(wordFreInDoc, wordFreInSent);
+		vds = calculateRelationalFrequency(doc.getChar1FrequenInDoc(), wordFreInSent);
 		sentenceObj.setChar1_5(round((float) (vds * 0.05)));
 		sentenceObj.setChar1_95(round((float) (vds * 0.95)));
-		sentenceObj.setChar1_Mean(round(vds / wordFreInDoc.size()));
+		sentenceObj.setChar1_Mean(round(vds / doc.getChar1FrequenInDoc().size()));
 
 		// Char 3 gram
-		wordFreInDoc = findWordFrequency(allCharGramListsDoc.get(1));
-		wordFreInSent = findWordFrequency(allCharGramListsSent.get(1));
+		wordFreInSent = findWordFrequency(sentenceObj.getAllCharGramListsInSent().get(1));
 
-		vds = calculateRelationalFrequency(wordFreInDoc, wordFreInSent);
+		vds = calculateRelationalFrequency(doc.getChar3FrequenInDoc(), wordFreInSent);
 		sentenceObj.setChar3_5(round((float) (vds * 0.05)));
 		sentenceObj.setChar3_95(round((float) (vds * 0.95)));
-		sentenceObj.setChar3_Mean(round((vds / wordFreInDoc.size())));
+		sentenceObj.setChar3_Mean(round((vds / doc.getChar3FrequenInDoc().size())));
 
 		// Char 4 gram
-		wordFreInDoc = findWordFrequency(allCharGramListsDoc.get(2));
-		wordFreInSent = findWordFrequency(allCharGramListsSent.get(2));
+		wordFreInSent = findWordFrequency(sentenceObj.getAllCharGramListsInSent().get(2));
 
-		vds = calculateRelationalFrequency(wordFreInDoc, wordFreInSent);
+		vds = calculateRelationalFrequency(doc.getChar4FrequenInDoc(), wordFreInSent);
 		sentenceObj.setChar4_5(round((float) (vds * 0.05)));
 		sentenceObj.setChar4_95(round((float) (vds * 0.95)));
-		sentenceObj.setChar4_Mean(round(vds / wordFreInDoc.size()));
+		sentenceObj.setChar4_Mean(round(vds / doc.getChar4FrequenInDoc().size()));
 
-		sentenceObj.setLengthByChar(allCharGramListsSent.get(0).length);
+		sentenceObj.setLengthByChar(sentenceObj.getAllCharGramListsInSent().get(0).length);
 
 		return sentenceObj;
 	}
@@ -133,33 +113,36 @@ public class Features {
 
 	public Sentence findPOSFrequency(Sentence sentence) {
 
-		POS_tagger posTaggerObj = new POS_tagger();
-		String sen, noStopWordSent = null;
-		String wordArr[] = null;
+		String wordArrWithPOS[] = null;
 		try {
-			noStopWordSent = text.removeStopWords(sentence.getOriginalSentence());
-			sen = posTaggerObj.builtPOS(noStopWordSent);
-			wordArr = text.splitToWords(sen);
+			POS_tagger posTaggerObj = new POS_tagger();
+			String sen = posTaggerObj.builtPOS(sentence.getNoStopWordSentence());
+			StringTokenizer st = new StringTokenizer(sen, " ");
+			wordArrWithPOS = new String[st.countTokens()];
+			wordArrWithPOS = sen.split("([.,!?:;'\"-]|\\s)+");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
 		Map<String, Float> frequencyPos = new HashMap<>();
 		int i = 0;
 		for (Map.Entry<String, List<String>> posTag : posTags.entrySet()) {
 			frequencyPos.put(posTag.getKey(), (float) 0);
 		}
 
-		while (i < wordArr.length) {
+		while (i < wordArrWithPOS.length) {
 			for (Map.Entry<String, List<String>> posTag : posTags.entrySet()) {
 				int j = 0;
 				while (j < posTag.getValue().size()) {
-					if (wordArr[i].substring(wordArr[i].lastIndexOf("_") + 1).equals(posTag.getValue().get(j))) {
+					if (wordArrWithPOS[i].substring(wordArrWithPOS[i].lastIndexOf("_") + 1)
+							.equals(posTag.getValue().get(j))) {
 						if (frequencyPos.get(posTag.getKey()) != 0) {
 							float n = frequencyPos.get(posTag.getKey());
-							frequencyPos.put(posTag.getKey(), round(n + (float) 1 / wordArr.length));
+							frequencyPos.put(posTag.getKey(),
+									round(n + (float) 1 / sentence.getWordArrInSent().length));
 							break;
 						} else {
-							frequencyPos.put(posTag.getKey(), round((float) 1 / wordArr.length));
+							frequencyPos.put(posTag.getKey(), round((float) 1 / sentence.getWordArrInSent().length));
 							break;
 						}
 					}
@@ -169,8 +152,7 @@ public class Features {
 			i++;
 		}
 		sentence.setNum_POS(frequencyPos);
-		sentence.setNoStopWordSentence(noStopWordSent);
-		sentence.setLengthByWords(wordArr.length);
+		sentence.setLengthByWords(sentence.getWordArrInSent().length);
 
 		return sentence;
 	}
@@ -226,9 +208,18 @@ public class Features {
 
 					Sentence sentObj = new Sentence();
 					sentObj.setOriginalSentence(sentenceList.get(j).getOriginalSentence());
+
+					try {
+						sentObj.setNoStopWordSentence(text.removeStopWords(sentObj.getOriginalSentence()));
+						sentObj.setAllCharGramListsInSent(text.splitToChar(sentObj.getNoStopWordSentence()));
+
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					sentObj.setWordArrInSent(text.splitToWords(sentObj.getNoStopWordSentence()));
 					sentObj = feat.findPOSFrequency(sentObj);
 					sentObj = feat.findPunctuationFrequency(sentObj);
-					sentObj = feat.findRelationalFrequency(document.getOriginalDoc(), sentObj);
+					sentObj = feat.findRelationalFrequency(document, sentObj);
 
 					if (passage.getKey() % 2 != 0) {
 						sentObj.setY(0);
@@ -247,7 +238,7 @@ public class Features {
 				sentObj.setOriginalSentence(sentenceList.get(j).getOriginalSentence());
 				sentObj = feat.findPOSFrequency(sentObj);
 				sentObj = feat.findPunctuationFrequency(sentObj);
-				sentObj = feat.findRelationalFrequency(document.getOriginalDoc(), sentObj);
+				sentObj = feat.findRelationalFrequency(document, sentObj);
 				sentObj.setY(0);
 
 				sentenceListNew.add(sentObj);
