@@ -3,16 +3,16 @@ package main;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,6 +25,9 @@ import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.ngram.NGramTokenizer;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -161,8 +164,9 @@ public class Text {
 
 	}
 
-	public Map<Integer, Integer> getOffSetPlagiList(String pt) {
-		Map<Integer, Integer> offsetLenghtPla = new TreeMap<Integer, Integer>();
+	public List<OffSetCl> getOffSetPlagiListFromXml(String pt, Integer docLen) {
+		List<OffSetCl> offSetList = new ArrayList<OffSetCl>();
+		OffSetCl offSet;
 		try {
 			File fXmlFile = new File(pt);
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -170,12 +174,96 @@ public class Text {
 			Document doc = dBuilder.parse(fXmlFile);
 			doc.getDocumentElement().normalize();
 			NodeList nList = doc.getElementsByTagName("feature");
+			int begin, end = 0, len, first = 0;
 			for (int temp = 0; temp < nList.getLength(); temp++) {
 				Node nNode = nList.item(temp);
+				offSet = new OffSetCl();
 				if (nNode.getAttributes().getNamedItem("name").getNodeValue().equals("plagiarism")) {
-					offsetLenghtPla.put(
-							Integer.valueOf(nNode.getAttributes().getNamedItem("this_offset").getNodeValue()),
-							Integer.valueOf(nNode.getAttributes().getNamedItem("this_length").getNodeValue()));
+					first++;
+					begin = Integer.valueOf(nNode.getAttributes().getNamedItem("this_offset").getNodeValue());
+					len = Integer.valueOf(nNode.getAttributes().getNamedItem("this_length").getNodeValue());
+					if (first == 1 && begin != 0) {
+						end = begin - 1;
+						offSet.setBegin(0);
+						offSet.setEnd(end);
+						offSet.setLable(0);
+						offSetList.add(offSet);
+					}
+
+					if (begin + len != begin) {
+						offSet = new OffSetCl();
+						end = begin + len;
+						offSet.setBegin(begin);
+						offSet.setEnd(end);
+						offSet.setLable(1);
+						offSetList.add(offSet);
+					}
+
+					if (temp != nList.getLength() - 1) {
+						nNode = nList.item(temp + 1);
+						int begin1 = Integer.valueOf(nNode.getAttributes().getNamedItem("this_offset").getNodeValue());
+						if (end + 1 != begin1) {
+							offSet = new OffSetCl();
+							begin = end + 1;
+							end = begin1 - 1;
+							offSet.setBegin(begin);
+							offSet.setEnd(end);
+							offSet.setLable(0);
+							offSetList.add(offSet);
+						}
+					}
+				}
+			}
+			if (end < docLen && (docLen - end) >= 10) {
+				offSet = new OffSetCl();
+				begin = end + 1;
+				end = docLen;
+				offSet.setBegin(begin);
+				offSet.setEnd(end);
+				offSet.setLable(0);
+				offSetList.add(offSet);
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return offSetList;
+	}
+
+	public List<OffSetCl> getOffSetPlagiListFromJson(String pt) {
+		List<OffSetCl> offSetList = new ArrayList<OffSetCl>();
+		OffSetCl offSet;
+		JSONParser parser = new JSONParser();
+
+		try {
+			Object obj = parser.parse(new FileReader(pt));
+			JSONObject authorObject = (JSONObject) obj;
+			JSONArray authorsArr = (JSONArray) authorObject.get("authors");
+
+			if (authorsArr != null) {
+				int maxOffSet = 0, indexMax = 0;
+				for (int i = 0; i < authorsArr.size(); i++) {
+					JSONArray offSetArr = (JSONArray) authorsArr.get(i);
+					if (offSetArr.size() > maxOffSet) {
+						maxOffSet = offSetArr.size();
+						indexMax = i;
+					}
+				}
+				for (int i = 0; i < authorsArr.size(); i++) {
+					JSONArray offSetArr = (JSONArray) authorsArr.get(i);
+					int isPlagi = 0;
+					if (indexMax != i) {
+						isPlagi = 1;
+					}
+					for (int j = 0; j < offSetArr.size(); j++) {
+						offSet = new OffSetCl();
+						JSONObject offSetValue = (JSONObject) offSetArr.get(j);
+						offSet.setBegin(((Long) offSetValue.get("from")).intValue());
+						offSet.setEnd(((Long) offSetValue.get("to")).intValue());
+						offSet.setLable(isPlagi);
+						offSetList.add(offSet);
+					}
 				}
 
 			}
@@ -183,39 +271,23 @@ public class Text {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return offsetLenghtPla;
+		return offSetList;
 	}
 
 	public DocumentCl setLableToPassage(DocumentCl document) {
 
-		Map<Integer, String> passageLable = new TreeMap<Integer, String>();
-		int begin = 0;
-		int end = 0, m = 0;
+		int begin = 0, end = 0;
+		List<OffSetCl> offSetInDoc = document.getOffSetInDoc();
+		Collections.sort(offSetInDoc, (o1, o2) -> o1.getBegin() - o2.getBegin());
 
-		for (Entry<Integer, Integer> offs : document.offsetLenghtPla.entrySet()) {
-
-			m++;
-			if (begin != offs.getKey()) {
-				// if plagiarism offset is just right next after each other
-				end = offs.getKey() - 1;
-				passageLable.put(m, document.getOriginalDoc().substring(begin, end));
-			}
-
-			m++;
-			begin = offs.getKey();
-			end = begin + offs.getValue();
-			passageLable.put(m, document.getOriginalDoc().substring(begin, end));
-
-			begin = end + 1;
-
-		}
-		if (end < document.getOriginalDoc().length() && (document.getOriginalDoc().length() - end) >= 10) {
-			// get the last passage which is not plagiarism
-			m++;
-			passageLable.put(m, document.getOriginalDoc().substring(end + 1, document.getOriginalDoc().length()));
+		for (int i = 0; i < offSetInDoc.size(); i++) {
+			begin = offSetInDoc.get(i).getBegin();
+			end = offSetInDoc.get(i).getEnd();
+			offSetInDoc.get(i).setPassage(document.getOriginalDoc().substring(begin, end));
 		}
 
-		document.setPassageLable(passageLable);
+		document.setOffSetInDoc(offSetInDoc);
+
 		return document;
 	}
 
@@ -227,14 +299,24 @@ public class Text {
 				File file = new File(pt + "/" + listOfPart[i].getName());
 				File[] listOfFile = file.listFiles();
 				Features feat = new Features();
-				
+
 				if (listOfFile.length != 0) {
 					DocumentCl document = new DocumentCl();
 					for (int j = 0; j < listOfFile.length; j++) {
 						boolean isPlagi = true;
-						if (listOfFile[j].isFile() && listOfFile[j].getName().endsWith(".txt")) {
-							
-							document.setOriginalDoc(readTextFile(pt + "/" + listOfPart[i].getName() + "/" + listOfFile[j].getName()));
+						String file1 = "", file1NoExtension = "", file2 = "", file2NoExtension = "";
+						if (j != listOfFile.length - 1) {
+							file1 = listOfFile[j].getName();
+							file1NoExtension = listOfFile[j].getName().substring(0, file1.lastIndexOf("."));
+							file2 = listOfFile[j + 1].getName();
+							file2NoExtension = listOfFile[j + 1].getName().substring(0, file2.lastIndexOf("."));
+						}
+
+						if (listOfFile[j].isFile() && (file1NoExtension == file2NoExtension) && (file1.endsWith(".txt") && file2.endsWith(".xml"))
+								|| (file1.endsWith(".truth") && file2.endsWith(".txt")) || (file2.endsWith(".txt") && file1.endsWith(".xml"))
+								|| (file2.endsWith(".truth") && file1.endsWith(".txt"))) {
+
+							document.setOriginalDoc(readTextFile(pt + "/" + listOfPart[i].getName() + "/" + file1NoExtension + ".txt"));
 							try {
 								document.setNoStopWordDoc(removeStopWords(document.getOriginalDoc()));
 								document.setWordArrInDoc(splitToWords(document.getNoStopWordDoc()));
@@ -246,27 +328,30 @@ public class Text {
 							} catch (Exception e) {
 								e.printStackTrace();
 							}
-						}
-						if (listOfFile[j].isFile() && listOfFile[j].getName().endsWith(".xml")) {
 
-							document.setOffsetLenghtPla(getOffSetPlagiList(pt + "/" + listOfPart[i].getName() + "/" + listOfFile[j].getName()));
+							if (file1.endsWith(".xml") || file2.endsWith(".xml")) {
 
-							if (document.getOffsetLenghtPla().isEmpty()) {
-								isPlagi = false;
+								document.setOffSetInDoc(getOffSetPlagiListFromXml(pt + "/" + listOfPart[i].getName() + "/" + file1NoExtension + ".xml", document.getOriginalDoc().length()));
+								if (document.getOffSetInDoc().isEmpty()) {
+									isPlagi = false;
+								}
 							}
-						}
+							if (file1.endsWith(".truth") || file2.endsWith(".truth")) {
 
-						if (!document.getOffsetLenghtPla().isEmpty() || !isPlagi) {
-							if (isPlagi) {
-								document = feat.setFeatureToSentence(setLableToPassage(document), 1);
-
-							} else {
-								document = feat.setFeatureToSentence(document, 0);
+								document.setOffSetInDoc(getOffSetPlagiListFromJson(pt + "/" + listOfPart[i].getName() + "/" + file1NoExtension + ".truth"));
 							}
-							String fileName = listOfFile[j].getName().substring(0, listOfFile[j].getName().length() - 4) + ".arff";
-							writFeatureToFile(document, "result" + "/" + listOfPart[i].getName() + "/" + fileName);
 
-							document = new DocumentCl();
+							if ((document.getOffSetInDoc().isEmpty() && !isPlagi) || (!document.getOffSetInDoc().isEmpty())) {
+								if (isPlagi) {
+									document = feat.setFeatureToSentence(setLableToPassage(document), 1);
+								} else {
+									document = feat.setFeatureToSentence(document, 0);
+								}
+								String fileName = listOfFile[j].getName().substring(0, listOfFile[j].getName().length() - 4) + ".arff";
+								writFeatureToFile(document, "result" + "/" + listOfPart[i].getName() + "/" + fileName);
+
+								document = new DocumentCl();
+							}
 						}
 					}
 				}
@@ -327,15 +412,15 @@ public class Text {
 			inst.setValue(atts.get(11), sentObj.word_95);
 			inst.setValue(atts.get(12), sentObj.lengthByWords);
 			inst.setValue(atts.get(13), sentObj.lengthByChar);
-			
+
 			int k = 13;
 			for (Entry<String, Float> pos : sentObj.num_POS.entrySet()) {
-				k ++;
+				k++;
 				inst.setValue(atts.get(k), pos.getValue());
 			}
 
 			for (Entry<Character, Float> pun : sentObj.num_punctuation.entrySet()) {
-				k ++;
+				k++;
 				inst.setValue(atts.get(k), pun.getValue());
 			}
 			k++;

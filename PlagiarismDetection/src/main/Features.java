@@ -132,12 +132,10 @@ public class Features {
 			for (Map.Entry<String, List<String>> posTag : posTags.entrySet()) {
 				int j = 0;
 				while (j < posTag.getValue().size()) {
-					if (wordArrWithPOS[i].substring(wordArrWithPOS[i].lastIndexOf("_") + 1)
-							.equals(posTag.getValue().get(j))) {
+					if (wordArrWithPOS[i].substring(wordArrWithPOS[i].lastIndexOf("_") + 1).equals(posTag.getValue().get(j))) {
 						if (frequencyPos.get(posTag.getKey()) != 0) {
 							float n = frequencyPos.get(posTag.getKey());
-							frequencyPos.put(posTag.getKey(),
-									round(n + (float) 1 / sentence.getWordArrInSent().length));
+							frequencyPos.put(posTag.getKey(), round(n + (float) 1 / sentence.getWordArrInSent().length));
 							break;
 						} else {
 							frequencyPos.put(posTag.getKey(), round((float) 1 / sentence.getWordArrInSent().length));
@@ -201,17 +199,13 @@ public class Features {
 		Sentence sentObj = null;
 
 		if (isPlagi == 1) {
-			for (Entry<Integer, String> passage : document.getPassageLable().entrySet()) {
-				List<Sentence> sentenceList = text.splitToSentences(passage.getValue());
+			for (int i = 0; i < document.getOffSetInDoc().size(); i++) {
+				List<Sentence> sentenceList = text.splitToSentences(document.getOffSetInDoc().get(i).getPassage());
 				for (int j = 0; j < sentenceList.size(); j++) {
 					sentObj = new Sentence();
 					sentObj.setOriginalSentence(sentenceList.get(j).getOriginalSentence());
-					if (passage.getKey() % 2 != 0) {
-						isPlagi = 0;
-					} else {
-						isPlagi = 1;
-					}
-					sentObj = constructFeature(document, sentObj, isPlagi);
+					sentObj = constructFeature(document, sentObj);
+					sentObj.y = document.getOffSetInDoc().get(i).getLable();
 					sentenceListNew.add(sentObj);
 				}
 			}
@@ -220,18 +214,17 @@ public class Features {
 			for (int j = 0; j < sentenceList.size(); j++) {
 				sentObj = new Sentence();
 				sentObj.setOriginalSentence(sentenceList.get(j).getOriginalSentence());
-				sentObj = constructFeature(document, sentObj, isPlagi);
+				sentObj = constructFeature(document, sentObj);
+				sentObj.y = 0;
 				sentenceListNew.add(sentObj);
 			}
 		}
 		document.setSentencesInDoc(sentenceListNew);
 
-		System.out.println("All sentences in doc:" + document.getSentencesInDoc().size());
-
 		return document;
 	}
 
-	public Sentence constructFeature(DocumentCl document, Sentence sentObj, Integer isPlagi) {
+	public Sentence constructFeature(DocumentCl document, Sentence sentObj) {
 		Text text = new Text();
 		try {
 			sentObj.setNoStopWordSentence(text.removeStopWords(sentObj.getOriginalSentence()));
@@ -243,7 +236,6 @@ public class Features {
 		sentObj = findPOSFrequency(sentObj);
 		sentObj = findPunctuationFrequency(sentObj);
 		sentObj = findRelationalFrequency(document, sentObj);
-		sentObj.setY(isPlagi);
 		return sentObj;
 	}
 
