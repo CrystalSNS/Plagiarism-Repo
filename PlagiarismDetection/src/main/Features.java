@@ -16,7 +16,8 @@ import tagger.POS_tagger;
 public class Features {
 
 	private static final List<Character> punctuationList = Arrays.asList('!', ',', '.', '?', '-', ';');
-	private static final Map<String, List<String>> posTags = new HashMap<>();
+	private static Map<String, List<String>> posTags = new HashMap<>();
+	private POS_tagger posTaggerObj = new POS_tagger();
 
 	static {
 		posTags.put("VERB", Arrays.asList("VB", "VBD", "VBG", "VBN", "VBP", "VBZ"));
@@ -113,7 +114,6 @@ public class Features {
 
 		String wordArrWithPOS[] = null;
 		try {
-			POS_tagger posTaggerObj = new POS_tagger();
 			String sen = posTaggerObj.builtPOS(sentence.getNoStopWordSentence());
 			StringTokenizer st = new StringTokenizer(sen, " ");
 			wordArrWithPOS = new String[st.countTokens()];
@@ -236,6 +236,7 @@ public class Features {
 		sentObj = findPOSFrequency(sentObj);
 		sentObj = findPunctuationFrequency(sentObj);
 		sentObj = findRelationalFrequency(document, sentObj);
+		
 		return sentObj;
 	}
 

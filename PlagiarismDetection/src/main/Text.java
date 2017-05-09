@@ -11,8 +11,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,6 +44,11 @@ import weka.core.Instances;
 import weka.core.converters.ArffSaver;
 
 public class Text {
+
+	ArrayList<Attribute> atts = new ArrayList<Attribute>();
+	ArrayList<Instance> instanceList;
+	private static final String attName[] = new String[] { "char1_mean", "char1_5p", "char1_95p", "char3_mean", "char3_5p", "char3_95p", "char4_mean", "char4_5p", "char4_95p", "word_mean", "word_5p", "word_95p", "length_by_word", "length_by-char", "det",
+			"adv", "prt", "pron", "verb", "adj", "conj", "num", "adp", "noun", "!", ";", "comma", "-", ".", "?", "y" };
 
 	public String readTextFile(String pathStr) {
 
@@ -300,6 +307,8 @@ public class Text {
 				File[] listOfFile = file.listFiles();
 				Features feat = new Features();
 
+				createAttNameArr();
+
 				if (listOfFile.length != 0) {
 					DocumentCl document = new DocumentCl();
 					for (int j = 0; j < listOfFile.length; j++) {
@@ -331,7 +340,8 @@ public class Text {
 
 							if (file1.endsWith(".xml") || file2.endsWith(".xml")) {
 
-								document.setOffSetInDoc(getOffSetPlagiListFromXml(pt + "/" + listOfPart[i].getName() + "/" + file1NoExtension + ".xml", document.getOriginalDoc().length()));
+								document.setOffSetInDoc(
+										getOffSetPlagiListFromXml(pt + "/" + listOfPart[i].getName() + "/" + file1NoExtension + ".xml", document.getOriginalDoc().length()));
 								if (document.getOffSetInDoc().isEmpty()) {
 									isPlagi = false;
 								}
@@ -347,8 +357,10 @@ public class Text {
 								} else {
 									document = feat.setFeatureToSentence(document, 0);
 								}
+								
+								System.out.println("Total sentences: "+document.getSentencesInDoc().size());
 								String fileName = listOfFile[j].getName().substring(0, listOfFile[j].getName().length() - 4) + ".arff";
-								writFeatureToFile(document, "result" + "/" + listOfPart[i].getName() + "/" + fileName);
+								writFeatureToFile(addFeatureToArray(document), "result" + "/" + listOfPart[i].getName() + "/" + fileName);
 
 								document = new DocumentCl();
 							}
@@ -359,72 +371,100 @@ public class Text {
 		}
 	}
 
-	public void writFeatureToFile(DocumentCl docObj, String pt) {
-
-		ArrayList<Attribute> atts = new ArrayList<Attribute>();
-		ArrayList<Instance> instanceList = new ArrayList<Instance>();
-		atts.add(new Attribute("c1_M", 0));
-		atts.add(new Attribute("c1_5", 1));
-		atts.add(new Attribute("c1_95", 2));
-		atts.add(new Attribute("c3_M", 3));
-		atts.add(new Attribute("c3_5", 4));
-		atts.add(new Attribute("c3_95", 5));
-		atts.add(new Attribute("c4_M", 6));
-		atts.add(new Attribute("c4_5", 7));
-		atts.add(new Attribute("c4_95", 8));
-		atts.add(new Attribute("w_M", 9));
-		atts.add(new Attribute("w_5", 10));
-		atts.add(new Attribute("w_95", 11));
-		atts.add(new Attribute("lw", 12));
-		atts.add(new Attribute("lc", 13));
-		atts.add(new Attribute("det", 14));
-		atts.add(new Attribute("adv", 15));
-		atts.add(new Attribute("prt", 16));
-		atts.add(new Attribute("pron", 17));
-		atts.add(new Attribute("verb", 18));
-		atts.add(new Attribute("adj", 19));
-		atts.add(new Attribute("conj", 20));
-		atts.add(new Attribute("num", 21));
-		atts.add(new Attribute("adp", 22));
-		atts.add(new Attribute("noun", 23));
-		atts.add(new Attribute("!", 24));
-		atts.add(new Attribute("semi", 25));
-		atts.add(new Attribute(",", 26));
-		atts.add(new Attribute("-", 27));
-		atts.add(new Attribute(".", 28));
-		atts.add(new Attribute("?", 29));
-		atts.add(new Attribute("y", 30));
-
+	public Map<Integer, Float[]> addFeatureToArray(DocumentCl docObj) {
+		Map<Integer, Float[]> allfeatureArr = new TreeMap<Integer, Float[]>();
+		Float featArr[];
+		int i = 0;
 		for (Sentence sentObj : docObj.getSentencesInDoc()) {
-			Instance inst = new DenseInstance(31);
-
-			inst.setValue(atts.get(0), sentObj.char1_Mean);
-			inst.setValue(atts.get(1), sentObj.char1_5);
-			inst.setValue(atts.get(2), sentObj.char1_95);
-			inst.setValue(atts.get(3), sentObj.char3_Mean);
-			inst.setValue(atts.get(4), sentObj.char3_5);
-			inst.setValue(atts.get(5), sentObj.char3_95);
-			inst.setValue(atts.get(6), sentObj.char4_Mean);
-			inst.setValue(atts.get(7), sentObj.char4_5);
-			inst.setValue(atts.get(8), sentObj.char4_95);
-			inst.setValue(atts.get(9), sentObj.word_Mean);
-			inst.setValue(atts.get(10), sentObj.word_5);
-			inst.setValue(atts.get(11), sentObj.word_95);
-			inst.setValue(atts.get(12), sentObj.lengthByWords);
-			inst.setValue(atts.get(13), sentObj.lengthByChar);
+			featArr = new Float[31];
+			featArr[0] = sentObj.char1_Mean;
+			featArr[1] = sentObj.char1_5;
+			featArr[2] = sentObj.char1_95;
+			featArr[3] = sentObj.char3_Mean;
+			featArr[4] = sentObj.char3_5;
+			featArr[5] = sentObj.char3_95;
+			featArr[6] = sentObj.char4_Mean;
+			featArr[7] = sentObj.char4_5;
+			featArr[8] = sentObj.char4_95;
+			featArr[9] = sentObj.word_Mean;
+			featArr[10] = sentObj.word_5;
+			featArr[11] = sentObj.word_95;
+			featArr[12] = (float) sentObj.lengthByWords;
+			featArr[13] = (float) sentObj.lengthByChar;
 
 			int k = 13;
 			for (Entry<String, Float> pos : sentObj.num_POS.entrySet()) {
 				k++;
-				inst.setValue(atts.get(k), pos.getValue());
+				featArr[k] = pos.getValue();
 			}
 
 			for (Entry<Character, Float> pun : sentObj.num_punctuation.entrySet()) {
 				k++;
-				inst.setValue(atts.get(k), pun.getValue());
+				featArr[k] = pun.getValue();
 			}
 			k++;
-			inst.setValue(atts.get(k), sentObj.y);
+			featArr[k] = (float) sentObj.y;
+			allfeatureArr.put(i, featArr);
+			i++;
+		}
+		return allfeatureArr;
+	}
+
+	public void writFeatureToFile(Map<Integer, Float[]> allfeatureArr, String pt) {
+
+		Float zeroArr[] = new Float[31], arr_im1[], arr_im2[], arr_i[], arr_ip1[], arr_ip2[];
+
+		for (int j = 0; j < attName.length; j++) {
+			zeroArr[j] = (float) 0;
+		}
+		instanceList = new ArrayList<Instance>();
+		for (int i = 0; i < allfeatureArr.size(); i++) {
+			if (i == 0) {
+				arr_im2 = zeroArr;
+				arr_im1 = zeroArr;
+				arr_ip1 = allfeatureArr.get(i + 1);
+				arr_ip2 = allfeatureArr.get(i + 2);
+			} else if (i == 1) {
+				arr_im2 = zeroArr;
+				arr_im1 = allfeatureArr.get(i - 1);
+				arr_ip1 = allfeatureArr.get(i + 1);
+				arr_ip2 = allfeatureArr.get(i + 2);
+			} else if (i == allfeatureArr.size() - 2) {
+				arr_im2 = allfeatureArr.get(i - 2);
+				arr_im1 = allfeatureArr.get(i - 1);
+				arr_ip1 = allfeatureArr.get(i + 1);
+				arr_ip2 = zeroArr;
+			} else if (i == allfeatureArr.size() - 1) {
+				arr_im2 = allfeatureArr.get(i - 2);
+				arr_im1 = allfeatureArr.get(i - 1);
+				arr_ip1 = zeroArr;
+				arr_ip2 = zeroArr;
+			} else {
+				arr_im2 = allfeatureArr.get(i - 2);
+				arr_im1 = allfeatureArr.get(i - 1);
+				arr_ip1 = allfeatureArr.get(i + 1);
+				arr_ip2 = allfeatureArr.get(i + 2);
+			}
+			arr_i = allfeatureArr.get(i);
+
+			Float[] tempArr1 = new Float[arr_im2.length + arr_im1.length];
+			System.arraycopy(arr_im2, 0, tempArr1, 0, arr_im2.length);
+			System.arraycopy(arr_im1, 0, tempArr1, arr_im2.length, arr_im1.length);
+			Float[] tempArr2 = new Float[tempArr1.length + arr_i.length];
+			System.arraycopy(tempArr1, 0, tempArr2, 0, tempArr1.length);
+			System.arraycopy(arr_i, 0, tempArr2, tempArr1.length, arr_i.length);
+			tempArr1 = new Float[tempArr2.length + arr_ip1.length];
+			System.arraycopy(tempArr2, 0, tempArr1, 0, tempArr2.length);
+			System.arraycopy(arr_ip1, 0, tempArr1, tempArr2.length, arr_ip1.length);
+			tempArr2 = new Float[tempArr1.length + arr_ip2.length];
+			System.arraycopy(tempArr1, 0, tempArr2, 0, tempArr1.length);
+			System.arraycopy(arr_ip2, 0, tempArr2, tempArr1.length, arr_ip2.length);
+
+			Instance inst = new DenseInstance(tempArr2.length);
+
+			for (int k = 0; k < tempArr2.length; k++) {
+				inst.setValue(atts.get(k), tempArr2[k]);
+			}
 			instanceList.add(inst);
 		}
 
@@ -441,6 +481,28 @@ public class Text {
 			System.out.println("Save");
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+	}
+
+	public void createAttNameArr() {
+		int indexAtt = 0;
+		for (int j = 0; j < 5; j++) {
+			String suffix_str = "";
+			if (j == 0) {
+				suffix_str = "_i-2";
+			} else if (j == 1) {
+				suffix_str = "_i-1";
+			} else if (j == 2) {
+				suffix_str = "_i";
+			} else if (j == 3) {
+				suffix_str = "_i+1";
+			} else if (j == 4) {
+				suffix_str = "_i+2";
+			}
+			for (int k = 0; k < attName.length; k++) {
+				atts.add(new Attribute(attName[k] + suffix_str, indexAtt));
+				indexAtt++;
+			}
 		}
 	}
 
