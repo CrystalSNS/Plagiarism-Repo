@@ -47,8 +47,9 @@ public class Text {
 
 	ArrayList<Attribute> atts = new ArrayList<Attribute>();
 	ArrayList<Instance> instanceList;
-	private static final String attName[] = new String[] { "char1_mean", "char1_5p", "char1_95p", "char3_mean", "char3_5p", "char3_95p", "char4_mean", "char4_5p", "char4_95p", "word_mean", "word_5p", "word_95p", "length_by_word", "length_by-char", "det",
-			"adv", "prt", "pron", "verb", "adj", "conj", "num", "adp", "noun", "!", ";", "comma", "-", ".", "?", "y" };
+	private static final String attName[] = new String[] { "char1_mean", "char1_5p", "char1_95p", "char3_mean", "char3_5p", "char3_95p", "char4_mean", "char4_5p", "char4_95p",
+			"word_mean", "word_5p", "word_95p", "length_by_word", "length_by-char", "det", "adv", "prt", "pron", "verb", "adj", "conj", "num", "adp", "noun", "!", ";", "comma",
+			"-", ".", "?", "Y" };
 
 	public String readTextFile(String pathStr) {
 
@@ -272,7 +273,6 @@ public class Text {
 						offSetList.add(offSet);
 					}
 				}
-
 			}
 
 		} catch (Exception e) {
@@ -291,6 +291,11 @@ public class Text {
 			begin = offSetInDoc.get(i).getBegin();
 			end = offSetInDoc.get(i).getEnd();
 			offSetInDoc.get(i).setPassage(document.getOriginalDoc().substring(begin, end));
+			// if(offSetInDoc.get(i).getLable()==1){
+			// System.out.println("\nPlagiarism passage = i:"+i+", Label
+			// Y:"+offSetInDoc.get(i).getLable()+"\n"+offSetInDoc.get(i).getPassage());
+			// System.out.println("------------------------------------------------------------------------------------------------------------------------------");
+			// }
 		}
 
 		document.setOffSetInDoc(offSetInDoc);
@@ -298,71 +303,106 @@ public class Text {
 		return document;
 	}
 
-	public void extractTextAndGroundTruth(String pt) {
+	public void extractTextAndGroundTruth(String pt, Boolean hasGroundTruth) {
 		File folder = new File(pt);
-		File[] listOfPart = folder.listFiles();
-		for (int i = 0; i < listOfPart.length; i++) {
-			if (listOfPart[i].isDirectory()) {
-				File file = new File(pt + "/" + listOfPart[i].getName());
-				File[] listOfFile = file.listFiles();
-				Features feat = new Features();
 
-				createAttNameArr();
+		File[] listOfPart1 = folder.listFiles();
+		for (int i = 0; i < listOfPart1.length; i++) {
+			if (listOfPart1[i].isDirectory()) {
+				File[] listOfPart2 = listOfPart1[i].listFiles();
+				for (int m = 0; m < listOfPart2.length; m++) {
+					if (listOfPart2[m].isDirectory()) {
+						File file = new File(pt + "/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName());
+						File[] listOfFile = file.listFiles();
+						Features feat = new Features();
 
-				if (listOfFile.length != 0) {
-					DocumentCl document = new DocumentCl();
-					for (int j = 0; j < listOfFile.length; j++) {
-						boolean isPlagi = true;
-						String file1 = "", file1NoExtension = "", file2 = "", file2NoExtension = "";
-						if (j != listOfFile.length - 1) {
-							file1 = listOfFile[j].getName();
-							file1NoExtension = listOfFile[j].getName().substring(0, file1.lastIndexOf("."));
-							file2 = listOfFile[j + 1].getName();
-							file2NoExtension = listOfFile[j + 1].getName().substring(0, file2.lastIndexOf("."));
-						}
+						createAttNameArr();
 
-						if (listOfFile[j].isFile() && (file1NoExtension == file2NoExtension) && (file1.endsWith(".txt") && file2.endsWith(".xml"))
-								|| (file1.endsWith(".truth") && file2.endsWith(".txt")) || (file2.endsWith(".txt") && file1.endsWith(".xml"))
-								|| (file2.endsWith(".truth") && file1.endsWith(".txt"))) {
+						if (listOfFile.length != 0 && hasGroundTruth) {
+							DocumentCl document = new DocumentCl();
+							for (int j = 0; j < listOfFile.length; j++) {
+								boolean isPlagi = true;
+								String file1 = "", file1NoExtension = "", file2 = "", file2NoExtension = "";
+								if (j != listOfFile.length - 1) {
+									file1 = listOfFile[j].getName();
+									file1NoExtension = listOfFile[j].getName().substring(0, file1.lastIndexOf("."));
+									file2 = listOfFile[j + 1].getName();
+									file2NoExtension = listOfFile[j + 1].getName().substring(0, file2.lastIndexOf("."));
+								}
 
-							document.setOriginalDoc(readTextFile(pt + "/" + listOfPart[i].getName() + "/" + file1NoExtension + ".txt"));
-							try {
-								document.setNoStopWordDoc(removeStopWords(document.getOriginalDoc()));
-								document.setWordArrInDoc(splitToWords(document.getNoStopWordDoc()));
-								document.setAllCharGramListsInDoc(splitToChar(document.getNoStopWordDoc()));
-								document.setWordFrequenInDoc(feat.findWordFrequency(document.getWordArrInDoc()));
-								document.setChar1FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(0)));
-								document.setChar3FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(1)));
-								document.setChar4FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(2)));
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
+								if (listOfFile[j].isFile() && (file1NoExtension == file2NoExtension) && (file1.endsWith(".txt") && file2.endsWith(".xml"))
+										|| (file1.endsWith(".truth") && file2.endsWith(".txt")) || (file2.endsWith(".txt") && file1.endsWith(".xml"))
+										|| (file2.endsWith(".truth") && file1.endsWith(".txt"))) {
 
-							if (file1.endsWith(".xml") || file2.endsWith(".xml")) {
+									document.setOriginalDoc(readTextFile(pt + "/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName() + "/" + file1NoExtension + ".txt"));
+									try {
+										document.setNoStopWordDoc(removeStopWords(document.getOriginalDoc()));
+										document.setWordArrInDoc(splitToWords(document.getNoStopWordDoc()));
+										document.setAllCharGramListsInDoc(splitToChar(document.getNoStopWordDoc()));
+										document.setWordFrequenInDoc(feat.findWordFrequency(document.getWordArrInDoc()));
+										document.setChar1FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(0)));
+										document.setChar3FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(1)));
+										document.setChar4FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(2)));
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
 
-								document.setOffSetInDoc(
-										getOffSetPlagiListFromXml(pt + "/" + listOfPart[i].getName() + "/" + file1NoExtension + ".xml", document.getOriginalDoc().length()));
-								if (document.getOffSetInDoc().isEmpty()) {
-									isPlagi = false;
+									if (file1.endsWith(".xml") || file2.endsWith(".xml")) {
+
+										document.setOffSetInDoc(
+												getOffSetPlagiListFromXml(pt + "/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName() + "/" + file1NoExtension + ".xml",
+														document.getOriginalDoc().length()));
+										if (document.getOffSetInDoc().isEmpty()) {
+											isPlagi = false;
+										}
+									}
+									if (file1.endsWith(".truth") || file2.endsWith(".truth")) {
+
+										document.setOffSetInDoc(getOffSetPlagiListFromJson(
+												pt + "/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName() + "/" + file1NoExtension + ".truth"));
+									}
+
+									if ((document.getOffSetInDoc().isEmpty() && !isPlagi) || (!document.getOffSetInDoc().isEmpty())) {
+										if (isPlagi) {
+											document = feat.setFeatureToSentence(setLableToPassage(document), 1, hasGroundTruth);
+										} else {
+											document = feat.setFeatureToSentence(document, 0, hasGroundTruth);
+										}
+
+										// System.out.println("Total sentences:
+										// "+document.getSentencesInDoc().size());
+										String fileName = listOfFile[j].getName().substring(0, listOfFile[j].getName().length() - 4) + ".arff";
+										writFeatureToFile(addFeatureToArray(document),
+												"result/train/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName() + "/" + fileName);
+
+										document = new DocumentCl();
+									}
 								}
 							}
-							if (file1.endsWith(".truth") || file2.endsWith(".truth")) {
+						} else if (listOfFile.length != 0 && !hasGroundTruth) {
+							DocumentCl document = new DocumentCl();
+							for (int j = 0; j < listOfFile.length; j++) {
+								if (listOfFile[j].getName().endsWith("txt")) {
+									document.setOriginalDoc(readTextFile(pt + "/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName() + "/" + listOfFile[j].getName()));
+									try {
+										document.setNoStopWordDoc(removeStopWords(document.getOriginalDoc()));
+										document.setWordArrInDoc(splitToWords(document.getNoStopWordDoc()));
+										document.setAllCharGramListsInDoc(splitToChar(document.getNoStopWordDoc()));
+										document.setWordFrequenInDoc(feat.findWordFrequency(document.getWordArrInDoc()));
+										document.setChar1FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(0)));
+										document.setChar3FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(1)));
+										document.setChar4FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(2)));
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
+									document = feat.setFeatureToSentence(document, 0, hasGroundTruth);
 
-								document.setOffSetInDoc(getOffSetPlagiListFromJson(pt + "/" + listOfPart[i].getName() + "/" + file1NoExtension + ".truth"));
-							}
+									String fileName = listOfFile[j].getName().substring(0, listOfFile[j].getName().length() - 4) + ".arff";
+									writFeatureToFile(addFeatureToArray(document),
+											"result" + "/test/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName() + "/" + fileName);
 
-							if ((document.getOffSetInDoc().isEmpty() && !isPlagi) || (!document.getOffSetInDoc().isEmpty())) {
-								if (isPlagi) {
-									document = feat.setFeatureToSentence(setLableToPassage(document), 1);
-								} else {
-									document = feat.setFeatureToSentence(document, 0);
+									document = new DocumentCl();
 								}
-								
-								System.out.println("Total sentences: "+document.getSentencesInDoc().size());
-								String fileName = listOfFile[j].getName().substring(0, listOfFile[j].getName().length() - 4) + ".arff";
-								writFeatureToFile(addFeatureToArray(document), "result" + "/" + listOfPart[i].getName() + "/" + fileName);
-
-								document = new DocumentCl();
 							}
 						}
 					}
@@ -404,48 +444,62 @@ public class Text {
 			}
 			k++;
 			featArr[k] = (float) sentObj.y;
+			// if(sentObj.y==1){
+			// System.out.println("Sentence # : " +i);
+			// System.out.println(sentObj.getOriginalSentence());
+			// }
 			allfeatureArr.put(i, featArr);
 			i++;
 		}
+
 		return allfeatureArr;
 	}
 
 	public void writFeatureToFile(Map<Integer, Float[]> allfeatureArr, String pt) {
 
-		Float zeroArr[] = new Float[31], arr_im1[], arr_im2[], arr_i[], arr_ip1[], arr_ip2[];
+		Float zeroArr[], arr_im1[], arr_im2[], arr_i[], arr_ip1[], arr_ip2[];
 
-		for (int j = 0; j < attName.length; j++) {
+		zeroArr = new Float[30];
+		for (int j = 0; j < 30; j++) {
 			zeroArr[j] = (float) 0;
 		}
 		instanceList = new ArrayList<Instance>();
 		for (int i = 0; i < allfeatureArr.size(); i++) {
+
+			arr_im1 = new Float[allfeatureArr.get(i).length - 1];
+			arr_im2 = new Float[allfeatureArr.get(i).length - 1];
+			arr_i = new Float[allfeatureArr.get(i).length - 1];
+			arr_ip1 = new Float[allfeatureArr.get(i).length - 1];
+			arr_ip2 = new Float[allfeatureArr.get(i).length - 1];
+
 			if (i == 0) {
 				arr_im2 = zeroArr;
 				arr_im1 = zeroArr;
-				arr_ip1 = allfeatureArr.get(i + 1);
-				arr_ip2 = allfeatureArr.get(i + 2);
+				arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
+				arr_ip2 = Arrays.copyOf(allfeatureArr.get(i + 2), allfeatureArr.get(i + 2).length - 1);
 			} else if (i == 1) {
 				arr_im2 = zeroArr;
-				arr_im1 = allfeatureArr.get(i - 1);
-				arr_ip1 = allfeatureArr.get(i + 1);
-				arr_ip2 = allfeatureArr.get(i + 2);
+				arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
+				arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
+				arr_ip2 = Arrays.copyOf(allfeatureArr.get(i + 2), allfeatureArr.get(i + 2).length - 1);
 			} else if (i == allfeatureArr.size() - 2) {
-				arr_im2 = allfeatureArr.get(i - 2);
-				arr_im1 = allfeatureArr.get(i - 1);
-				arr_ip1 = allfeatureArr.get(i + 1);
+				arr_im2 = Arrays.copyOf(allfeatureArr.get(i - 2), allfeatureArr.get(i - 2).length - 1);
+				arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
+				arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
 				arr_ip2 = zeroArr;
 			} else if (i == allfeatureArr.size() - 1) {
-				arr_im2 = allfeatureArr.get(i - 2);
-				arr_im1 = allfeatureArr.get(i - 1);
+				arr_im2 = Arrays.copyOf(allfeatureArr.get(i - 2), allfeatureArr.get(i - 2).length - 1);
+				arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
 				arr_ip1 = zeroArr;
 				arr_ip2 = zeroArr;
 			} else {
-				arr_im2 = allfeatureArr.get(i - 2);
-				arr_im1 = allfeatureArr.get(i - 1);
-				arr_ip1 = allfeatureArr.get(i + 1);
-				arr_ip2 = allfeatureArr.get(i + 2);
+				arr_im2 = Arrays.copyOf(allfeatureArr.get(i - 2), allfeatureArr.get(i - 2).length - 1);
+				arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
+				arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
+				arr_ip2 = Arrays.copyOf(allfeatureArr.get(i + 2), allfeatureArr.get(i + 2).length - 1);
 			}
-			arr_i = allfeatureArr.get(i);
+
+			arr_i = Arrays.copyOf(allfeatureArr.get(i), allfeatureArr.get(i).length - 1);
 
 			Float[] tempArr1 = new Float[arr_im2.length + arr_im1.length];
 			System.arraycopy(arr_im2, 0, tempArr1, 0, arr_im2.length);
@@ -456,15 +510,32 @@ public class Text {
 			tempArr1 = new Float[tempArr2.length + arr_ip1.length];
 			System.arraycopy(tempArr2, 0, tempArr1, 0, tempArr2.length);
 			System.arraycopy(arr_ip1, 0, tempArr1, tempArr2.length, arr_ip1.length);
-			tempArr2 = new Float[tempArr1.length + arr_ip2.length];
+			tempArr2 = new Float[tempArr1.length + arr_ip2.length + 1];
 			System.arraycopy(tempArr1, 0, tempArr2, 0, tempArr1.length);
 			System.arraycopy(arr_ip2, 0, tempArr2, tempArr1.length, arr_ip2.length);
+			Float temp[] = allfeatureArr.get(i);
+			tempArr2[tempArr2.length - 1] = temp[allfeatureArr.get(i).length - 1];
+			arr_im1 = null;
+			arr_im2 = null;
+			arr_i = null;
+			arr_ip1 = null;
+			arr_ip2 = null;
+			temp = null;
+			tempArr1 = null;
 
 			Instance inst = new DenseInstance(tempArr2.length);
 
 			for (int k = 0; k < tempArr2.length; k++) {
-				inst.setValue(atts.get(k), tempArr2[k]);
+				if (k != tempArr2.length - 1) {
+					inst.setValue(atts.get(k), tempArr2[k]);
+
+				} else {
+					if (tempArr2[k] != 3) {
+						inst.setValue(atts.get(k), tempArr2[k]);
+					}
+				}
 			}
+			System.out.println();
 			instanceList.add(inst);
 		}
 
@@ -500,10 +571,13 @@ public class Text {
 				suffix_str = "_i+2";
 			}
 			for (int k = 0; k < attName.length; k++) {
-				atts.add(new Attribute(attName[k] + suffix_str, indexAtt));
-				indexAtt++;
+				if (!attName[k].equals("Y")) {
+					atts.add(new Attribute(attName[k] + suffix_str, indexAtt));
+					indexAtt++;
+				}
 			}
 		}
+		atts.add(new Attribute("Y_i", indexAtt));
 	}
 
 }

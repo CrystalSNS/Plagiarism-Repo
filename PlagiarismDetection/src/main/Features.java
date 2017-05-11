@@ -192,7 +192,7 @@ public class Features {
 		return bd.floatValue();
 	}
 
-	public DocumentCl setFeatureToSentence(DocumentCl document, Integer isPlagi) {
+	public DocumentCl setFeatureToSentence(DocumentCl document, Integer isPlagi, Boolean hasGroundTruth) {
 
 		Text text = new Text();
 		List<Sentence> sentenceListNew = new ArrayList<>();
@@ -215,10 +215,16 @@ public class Features {
 				sentObj = new Sentence();
 				sentObj.setOriginalSentence(sentenceList.get(j).getOriginalSentence());
 				sentObj = constructFeature(document, sentObj);
-				sentObj.y = 0;
+				if (hasGroundTruth) {
+					sentObj.y = 0;
+				} else {
+					sentObj.y = 3;
+				}
+
 				sentenceListNew.add(sentObj);
 			}
 		}
+
 		document.setSentencesInDoc(sentenceListNew);
 
 		return document;
@@ -236,7 +242,7 @@ public class Features {
 		sentObj = findPOSFrequency(sentObj);
 		sentObj = findPunctuationFrequency(sentObj);
 		sentObj = findRelationalFrequency(document, sentObj);
-		
+
 		return sentObj;
 	}
 
