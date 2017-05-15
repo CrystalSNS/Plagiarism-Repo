@@ -43,7 +43,7 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ArffSaver;
 
-public class Text {
+public class TextCl {
 
 	ArrayList<Attribute> atts = new ArrayList<Attribute>();
 	ArrayList<Instance> instanceList;
@@ -106,17 +106,17 @@ public class Text {
 		return sb.toString();
 	}
 
-	public List<Sentence> splitToSentences(String paragraph) {
+	public List<SentenceCl> splitToSentences(String paragraph) {
 
 		// problem with "" ()
 		paragraph = paragraph.replaceAll("[\\(\\)]", "");
 
 		Reader reader = new StringReader(paragraph);
 		DocumentPreprocessor dp = new DocumentPreprocessor(reader);
-		List<Sentence> sentenceList = new ArrayList<Sentence>();
+		List<SentenceCl> sentenceList = new ArrayList<SentenceCl>();
 
 		for (List<HasWord> sen : dp) {
-			Sentence sentence = new Sentence();
+			SentenceCl sentence = new SentenceCl();
 			String sentenceString = SentenceUtils.listToString(sen);
 			sentence.setOriginalSentence(sentenceString);
 			sentenceList.add(sentence);
@@ -312,9 +312,10 @@ public class Text {
 				File[] listOfPart2 = listOfPart1[i].listFiles();
 				for (int m = 0; m < listOfPart2.length; m++) {
 					if (listOfPart2[m].isDirectory()) {
+						System.out.println("Path:" + listOfPart2[m]);
 						File file = new File(pt + "/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName());
 						File[] listOfFile = file.listFiles();
-						Features feat = new Features();
+						FeaturesCl feat = new FeaturesCl();
 
 						createAttNameArr();
 
@@ -415,7 +416,7 @@ public class Text {
 		Map<Integer, Float[]> allfeatureArr = new TreeMap<Integer, Float[]>();
 		Float featArr[];
 		int i = 0;
-		for (Sentence sentObj : docObj.getSentencesInDoc()) {
+		for (SentenceCl sentObj : docObj.getSentencesInDoc()) {
 			featArr = new Float[31];
 			featArr[0] = sentObj.char1_Mean;
 			featArr[1] = sentObj.char1_5;
@@ -522,7 +523,6 @@ public class Text {
 			arr_ip2 = null;
 			temp = null;
 			tempArr1 = null;
-
 			Instance inst = new DenseInstance(tempArr2.length);
 
 			for (int k = 0; k < tempArr2.length; k++) {
@@ -530,12 +530,11 @@ public class Text {
 					inst.setValue(atts.get(k), tempArr2[k]);
 
 				} else {
-					if (tempArr2[k] != 3) {
-						inst.setValue(atts.get(k), tempArr2[k]);
+					if (tempArr2[k].intValue() != 3) {
+						inst.setValue(tempArr2.length - 1, tempArr2[k].intValue());
 					}
 				}
 			}
-			System.out.println();
 			instanceList.add(inst);
 		}
 
@@ -549,7 +548,7 @@ public class Text {
 		try {
 			saver.setFile(new File(pt));
 			saver.writeBatch();
-			System.out.println("Save");
+			System.out.println("Saved file: " + pt);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -577,7 +576,8 @@ public class Text {
 				}
 			}
 		}
-		atts.add(new Attribute("Y_i", indexAtt));
+		Attribute classAtt = new Attribute("Y_i", new ArrayList<String>(Arrays.asList(new String[] { "0", "1" })));
+		atts.add(classAtt);
 	}
 
 }

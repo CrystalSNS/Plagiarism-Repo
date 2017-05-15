@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Sentence {
+public class SentenceCl {
 
 	int lengthByWords;
 	int lengthByChar;
@@ -14,8 +14,8 @@ public class Sentence {
 	float char3_Mean, char3_5, char3_95;
 	float char4_Mean, char4_5, char4_95;
 	List<String[]> allCharGramListsInSent;
-	int y ;
-	
+	int y;
+
 	Map<Character, Float> num_punctuation = new HashMap<Character, Float>();
 	Map<String, Float> num_POS = new HashMap<String, Float>();
 	String originalSentence;

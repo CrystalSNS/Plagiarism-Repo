@@ -13,7 +13,7 @@ import java.util.StringTokenizer;
 
 import tagger.POS_tagger;
 
-public class Features {
+public class FeaturesCl {
 
 	private static final List<Character> punctuationList = Arrays.asList('!', ',', '.', '?', '-', ';');
 	private static Map<String, List<String>> posTags = new HashMap<>();
@@ -49,7 +49,7 @@ public class Features {
 		return frequencyWord;
 	}
 
-	public Sentence findRelationalFrequency(DocumentCl doc, Sentence sentenceObj) {
+	public SentenceCl findRelationalFrequency(DocumentCl doc, SentenceCl sentenceObj) {
 
 		Map<String, Integer> wordFreInSent = findWordFrequency(sentenceObj.getWordArrInSent());
 
@@ -110,7 +110,7 @@ public class Features {
 		return vds;
 	}
 
-	public Sentence findPOSFrequency(Sentence sentence) {
+	public SentenceCl findPOSFrequency(SentenceCl sentence) {
 
 		String wordArrWithPOS[] = null;
 		try {
@@ -153,7 +153,7 @@ public class Features {
 		return sentence;
 	}
 
-	public Sentence findPunctuationFrequency(Sentence sentenceObj) {
+	public SentenceCl findPunctuationFrequency(SentenceCl sentenceObj) {
 
 		Map<Character, Float> frequencyPun = new HashMap<>();
 		for (Character pu : punctuationList) {
@@ -194,15 +194,15 @@ public class Features {
 
 	public DocumentCl setFeatureToSentence(DocumentCl document, Integer isPlagi, Boolean hasGroundTruth) {
 
-		Text text = new Text();
-		List<Sentence> sentenceListNew = new ArrayList<>();
-		Sentence sentObj = null;
+		TextCl text = new TextCl();
+		List<SentenceCl> sentenceListNew = new ArrayList<>();
+		SentenceCl sentObj = null;
 
 		if (isPlagi == 1) {
 			for (int i = 0; i < document.getOffSetInDoc().size(); i++) {
-				List<Sentence> sentenceList = text.splitToSentences(document.getOffSetInDoc().get(i).getPassage());
+				List<SentenceCl> sentenceList = text.splitToSentences(document.getOffSetInDoc().get(i).getPassage());
 				for (int j = 0; j < sentenceList.size(); j++) {
-					sentObj = new Sentence();
+					sentObj = new SentenceCl();
 					sentObj.setOriginalSentence(sentenceList.get(j).getOriginalSentence());
 					sentObj = constructFeature(document, sentObj);
 					sentObj.y = document.getOffSetInDoc().get(i).getLable();
@@ -210,9 +210,9 @@ public class Features {
 				}
 			}
 		} else {
-			List<Sentence> sentenceList = text.splitToSentences(document.originalDoc);
+			List<SentenceCl> sentenceList = text.splitToSentences(document.originalDoc);
 			for (int j = 0; j < sentenceList.size(); j++) {
-				sentObj = new Sentence();
+				sentObj = new SentenceCl();
 				sentObj.setOriginalSentence(sentenceList.get(j).getOriginalSentence());
 				sentObj = constructFeature(document, sentObj);
 				if (hasGroundTruth) {
@@ -230,8 +230,8 @@ public class Features {
 		return document;
 	}
 
-	public Sentence constructFeature(DocumentCl document, Sentence sentObj) {
-		Text text = new Text();
+	public SentenceCl constructFeature(DocumentCl document, SentenceCl sentObj) {
+		TextCl text = new TextCl();
 		try {
 			sentObj.setNoStopWordSentence(text.removeStopWords(sentObj.getOriginalSentence()));
 			sentObj.setAllCharGramListsInSent(text.splitToChar(sentObj.getNoStopWordSentence()));
