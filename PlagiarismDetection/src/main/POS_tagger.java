@@ -1,4 +1,4 @@
-package tagger;
+package main;
 
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 

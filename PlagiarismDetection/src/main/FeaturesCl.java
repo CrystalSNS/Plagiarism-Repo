@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
 
-import tagger.POS_tagger;
-
 public class FeaturesCl {
 
 	private static final List<Character> punctuationList = Arrays.asList('!', ',', '.', '?', '-', ';');
