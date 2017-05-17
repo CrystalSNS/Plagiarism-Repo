@@ -197,7 +197,6 @@ public class TextCl {
 						offSet.setLable(0);
 						offSetList.add(offSet);
 					}
-
 					if (begin + len != begin) {
 						offSet = new OffSetCl();
 						end = begin + len;
@@ -212,12 +211,15 @@ public class TextCl {
 						int begin1 = Integer.valueOf(nNode.getAttributes().getNamedItem("this_offset").getNodeValue());
 						if (end + 1 != begin1) {
 							offSet = new OffSetCl();
-							begin = end + 1;
-							end = begin1 - 1;
-							offSet.setBegin(begin);
-							offSet.setEnd(end);
-							offSet.setLable(0);
-							offSetList.add(offSet);
+							
+							if(end != begin1){
+								begin = end + 1;
+								end = begin1 - 1;
+								offSet.setBegin(begin);
+								offSet.setEnd(end);
+								offSet.setLable(0);
+								offSetList.add(offSet);
+							}
 						}
 					}
 				}
@@ -291,6 +293,7 @@ public class TextCl {
 			begin = offSetInDoc.get(i).getBegin();
 			end = offSetInDoc.get(i).getEnd();
 			offSetInDoc.get(i).setPassage(document.getOriginalDoc().substring(begin, end));
+			
 		}
 
 		document.setOffSetInDoc(offSetInDoc);
@@ -331,50 +334,57 @@ public class TextCl {
 								if (listOfFile[j].isFile() && (file1NoExtension == file2NoExtension) && (file1.endsWith(".txt") && file2.endsWith(".xml"))
 										|| (file1.endsWith(".truth") && file2.endsWith(".txt")) || (file2.endsWith(".txt") && file1.endsWith(".xml"))
 										|| (file2.endsWith(".truth") && file1.endsWith(".txt"))) {
+									
 
 //									document.setOriginalDoc(readTextFile(pt + "/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName() + "/" + file1NoExtension + ".txt"));
 									document.setOriginalDoc(readTextFile(pt + "/" + file1NoExtension + ".txt"));
-									try {
-										document.setNoStopWordDoc(removeStopWords(document.getOriginalDoc()));
-										document.setWordArrInDoc(splitToWords(document.getNoStopWordDoc()));
-										document.setAllCharGramListsInDoc(splitToChar(document.getNoStopWordDoc()));
-										document.setWordFrequenInDoc(feat.findWordFrequency(document.getWordArrInDoc()));
-										document.setChar1FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(0)));
-										document.setChar3FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(1)));
-										document.setChar4FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(2)));
-									} catch (Exception e) {
-										e.printStackTrace();
-									}
-
-									if (file1.endsWith(".xml") || file2.endsWith(".xml")) {
-
-//										document.setOffSetInDoc(getOffSetPlagiListFromXml(pt + "/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName() + "/" + file1NoExtension + ".xml",document.getOriginalDoc().length()));
-										document.setOffSetInDoc(getOffSetPlagiListFromXml(pt + "/" + file1NoExtension + ".xml",document.getOriginalDoc().length()));
-										
-										if (document.getOffSetInDoc().isEmpty()) {
-											isPlagi = false;
+									if(!document.getOriginalDoc().isEmpty() && document.getOriginalDoc() != "" && document.getOriginalDoc().length() > 50  ){
+										try {
+											document.setNoStopWordDoc(removeStopWords(document.getOriginalDoc()));
+											document.setWordArrInDoc(splitToWords(document.getNoStopWordDoc()));
+											document.setAllCharGramListsInDoc(splitToChar(document.getNoStopWordDoc()));
+											document.setWordFrequenInDoc(feat.findWordFrequency(document.getWordArrInDoc()));
+											document.setChar1FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(0)));
+											document.setChar3FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(1)));
+											document.setChar4FrequenInDoc(feat.findWordFrequency(document.getAllCharGramListsInDoc().get(2)));
+										} catch (Exception e) {
+											e.printStackTrace();
 										}
-									}
-									if (file1.endsWith(".truth") || file2.endsWith(".truth")) {
-
-//										document.setOffSetInDoc(getOffSetPlagiListFromJson(pt + "/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName() + "/" + file1NoExtension + ".truth"));
-										document.setOffSetInDoc(getOffSetPlagiListFromJson(pt + "/" + file1NoExtension + ".truth"));
-									}
-
-									if ((document.getOffSetInDoc().isEmpty() && !isPlagi) || (!document.getOffSetInDoc().isEmpty())) {
-										if (isPlagi) {
-											document = feat.setFeatureToSentence(setLableToPassage(document), 1, hasGroundTruth);
-										} else {
-											document = feat.setFeatureToSentence(document, 0, hasGroundTruth);
+	
+										if (file1.endsWith(".xml") || file2.endsWith(".xml")) {
+	
+	//										document.setOffSetInDoc(getOffSetPlagiListFromXml(pt + "/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName() + "/" + file1NoExtension + ".xml",document.getOriginalDoc().length()));
+											document.setOffSetInDoc(getOffSetPlagiListFromXml(pt + "/" + file1NoExtension + ".xml",document.getOriginalDoc().length()));
+											
+											if (document.getOffSetInDoc().isEmpty()) {
+												isPlagi = false;
+											}
 										}
-
-										String fileName = listOfFile[j].getName().substring(0, listOfFile[j].getName().length() - 4) + ".arff";
-//										writFeatureToFile(addFeatureToArray(document),"result/train/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName() + "/" + fileName);
-										writFeatureToFile(addFeatureToArray(document),"result/train/" + pt.substring(7, pt.length()) + "/" + fileName);
-
-										document = new DocumentCl();
+										if (file1.endsWith(".truth") || file2.endsWith(".truth")) {
+	
+	//										document.setOffSetInDoc(getOffSetPlagiListFromJson(pt + "/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName() + "/" + file1NoExtension + ".truth"));
+											document.setOffSetInDoc(getOffSetPlagiListFromJson(pt + "/" + file1NoExtension + ".truth"));
+										}
+	
+										if ((document.getOffSetInDoc().isEmpty() && !isPlagi) || (!document.getOffSetInDoc().isEmpty())) {
+											if (isPlagi) {
+												document = feat.setFeatureToSentence(setLableToPassage(document), 1, hasGroundTruth);
+											} else {
+												document = feat.setFeatureToSentence(document, 0, hasGroundTruth);
+											}
+	
+											String fileName = listOfFile[j].getName().substring(0, listOfFile[j].getName().length() - 4) + ".arff";
+	//										writFeatureToFile(addFeatureToArray(document),"result/train/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName() + "/" + fileName);
+											writFeatureToFile(addFeatureToArray(document),"result/train/" + pt.substring(7, pt.length()) + "/" + fileName);
+	
+											document = new DocumentCl();
+										}
+									}else{
+										System.out.println("File text is empty or Length less than 50!");
 									}
+								
 								}
+								
 							}
 						} else if (listOfFile.length != 0 && !hasGroundTruth) {
 							DocumentCl document = new DocumentCl();
@@ -465,31 +475,67 @@ public class TextCl {
 			arr_ip1 = new Float[allfeatureArr.get(i).length - 1];
 			arr_ip2 = new Float[allfeatureArr.get(i).length - 1];
 
-			if (i == 0) {
+			if(allfeatureArr.size()>4){
+				if (i == 0) {
+					arr_im2 = zeroArr;
+					arr_im1 = zeroArr;
+					arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
+					arr_ip2 = Arrays.copyOf(allfeatureArr.get(i + 2), allfeatureArr.get(i + 2).length - 1);
+				} else if (i == 1) {
+					arr_im2 = zeroArr;
+					arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
+					arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
+					arr_ip2 = Arrays.copyOf(allfeatureArr.get(i + 2), allfeatureArr.get(i + 2).length - 1);
+				} else if (i == allfeatureArr.size() - 2) {
+					arr_im2 = Arrays.copyOf(allfeatureArr.get(i - 2), allfeatureArr.get(i - 2).length - 1);
+					arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
+					arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
+					arr_ip2 = zeroArr;
+				} else if (i == allfeatureArr.size() - 1) {
+					arr_im2 = Arrays.copyOf(allfeatureArr.get(i - 2), allfeatureArr.get(i - 2).length - 1);
+					arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
+					arr_ip1 = zeroArr;
+					arr_ip2 = zeroArr;
+				} else {
+					arr_im2 = Arrays.copyOf(allfeatureArr.get(i - 2), allfeatureArr.get(i - 2).length - 1);
+					arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
+					arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
+					arr_ip2 = Arrays.copyOf(allfeatureArr.get(i + 2), allfeatureArr.get(i + 2).length - 1);
+				}
+			}else if(allfeatureArr.size()==3){
+				if(i==0){
+					arr_im2 = zeroArr;
+					arr_im1 = zeroArr;
+					arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
+					arr_ip2 = Arrays.copyOf(allfeatureArr.get(i + 2), allfeatureArr.get(i + 2).length - 1);
+				}else if(i==1){
+					arr_im2 = zeroArr;
+					arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
+					arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
+					arr_ip2 = zeroArr;
+				}else if(i==2){
+					arr_im2 = Arrays.copyOf(allfeatureArr.get(i - 2), allfeatureArr.get(i - 2).length - 1);
+					arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
+					arr_ip1 = zeroArr;
+					arr_ip2 = zeroArr;
+				}
+			}else if(allfeatureArr.size()==2){
+				if(i==0){
+					arr_im2 = zeroArr;
+					arr_im1 = zeroArr;
+					arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
+					arr_ip2 = zeroArr;
+				}else if(i==1){
+					arr_im2 = zeroArr;
+					arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
+					arr_ip1 = zeroArr;
+					arr_ip2 = zeroArr;
+				}
+			}else if(allfeatureArr.size()==1){
 				arr_im2 = zeroArr;
 				arr_im1 = zeroArr;
-				arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
-				arr_ip2 = Arrays.copyOf(allfeatureArr.get(i + 2), allfeatureArr.get(i + 2).length - 1);
-			} else if (i == 1) {
-				arr_im2 = zeroArr;
-				arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
-				arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
-				arr_ip2 = Arrays.copyOf(allfeatureArr.get(i + 2), allfeatureArr.get(i + 2).length - 1);
-			} else if (i == allfeatureArr.size() - 2) {
-				arr_im2 = Arrays.copyOf(allfeatureArr.get(i - 2), allfeatureArr.get(i - 2).length - 1);
-				arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
-				arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
-				arr_ip2 = zeroArr;
-			} else if (i == allfeatureArr.size() - 1) {
-				arr_im2 = Arrays.copyOf(allfeatureArr.get(i - 2), allfeatureArr.get(i - 2).length - 1);
-				arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
 				arr_ip1 = zeroArr;
 				arr_ip2 = zeroArr;
-			} else {
-				arr_im2 = Arrays.copyOf(allfeatureArr.get(i - 2), allfeatureArr.get(i - 2).length - 1);
-				arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
-				arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
-				arr_ip2 = Arrays.copyOf(allfeatureArr.get(i + 2), allfeatureArr.get(i + 2).length - 1);
 			}
 
 			arr_i = Arrays.copyOf(allfeatureArr.get(i), allfeatureArr.get(i).length - 1);
