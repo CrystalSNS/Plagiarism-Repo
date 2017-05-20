@@ -321,7 +321,7 @@ public class TextCl {
 
 						if (listOfFile.length != 0 && hasGroundTruth) {
 							DocumentCl document = new DocumentCl();
-							for (int j = 0; j < listOfFile.length; j++) {
+							for (int j = 0; j <= listOfFile.length; j++) {
 								boolean isPlagi = true;
 								String file1 = "", file1NoExtension = "", file2 = "", file2NoExtension = "";
 								if (j != listOfFile.length - 1) {
@@ -501,6 +501,28 @@ public class TextCl {
 					arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
 					arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
 					arr_ip2 = Arrays.copyOf(allfeatureArr.get(i + 2), allfeatureArr.get(i + 2).length - 1);
+				}
+			}else if(allfeatureArr.size()==4){
+				if(i==0){
+					arr_im2 = zeroArr;
+					arr_im1 = zeroArr;
+					arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
+					arr_ip2 = Arrays.copyOf(allfeatureArr.get(i + 2), allfeatureArr.get(i + 2).length - 1);
+				}else if(i==1){
+					arr_im2 = zeroArr;
+					arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
+					arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
+					arr_ip2 = Arrays.copyOf(allfeatureArr.get(i + 2), allfeatureArr.get(i + 2).length - 1);
+				}else if(i==2){
+					arr_im2 = Arrays.copyOf(allfeatureArr.get(i - 2), allfeatureArr.get(i - 2).length - 1);
+					arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
+					arr_ip1 = Arrays.copyOf(allfeatureArr.get(i + 1), allfeatureArr.get(i + 1).length - 1);
+					arr_ip2 = zeroArr;
+				}else if(i==3){
+					arr_im2 = Arrays.copyOf(allfeatureArr.get(i - 2), allfeatureArr.get(i - 2).length - 1);
+					arr_im1 = Arrays.copyOf(allfeatureArr.get(i - 1), allfeatureArr.get(i - 1).length - 1);
+					arr_ip1 = zeroArr;
+					arr_ip2 = zeroArr;
 				}
 			}else if(allfeatureArr.size()==3){
 				if(i==0){
