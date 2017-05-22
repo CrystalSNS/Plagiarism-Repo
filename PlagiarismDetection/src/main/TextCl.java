@@ -321,7 +321,7 @@ public class TextCl {
 
 						if (listOfFile.length != 0 && hasGroundTruth) {
 							DocumentCl document = new DocumentCl();
-							for (int j = 0; j <= listOfFile.length; j++) {
+							for (int j = 0; j < listOfFile.length; j++) {
 								boolean isPlagi = true;
 								String file1 = "", file1NoExtension = "", file2 = "", file2NoExtension = "";
 								if (j != listOfFile.length - 1) {
@@ -331,9 +331,12 @@ public class TextCl {
 									file2NoExtension = listOfFile[j + 1].getName().substring(0, file2.lastIndexOf("."));
 								}
 
-								if (listOfFile[j].isFile() && (file1NoExtension == file2NoExtension) && (file1.endsWith(".txt") && file2.endsWith(".xml"))
-										|| (file1.endsWith(".truth") && file2.endsWith(".txt")) || (file2.endsWith(".txt") && file1.endsWith(".xml"))
-										|| (file2.endsWith(".truth") && file1.endsWith(".txt"))) {
+								if (	listOfFile[j].isFile() 
+										&& (file1NoExtension.equals(file2NoExtension)) 
+										&& (file1.endsWith(".txt") && file2.endsWith(".xml"))
+											|| (file1.endsWith(".truth") && file2.endsWith(".txt")) 
+											|| (file2.endsWith(".txt") && file1.endsWith(".xml"))
+											|| (file2.endsWith(".truth") && file1.endsWith(".txt"))) {
 									
 
 //									document.setOriginalDoc(readTextFile(pt + "/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName() + "/" + file1NoExtension + ".txt"));
@@ -360,10 +363,13 @@ public class TextCl {
 												isPlagi = false;
 											}
 										}
+										
+										String fileName = listOfFile[j].getName().substring(0, listOfFile[j].getName().length() - 4) + ".arff";
 										if (file1.endsWith(".truth") || file2.endsWith(".truth")) {
 	
 	//										document.setOffSetInDoc(getOffSetPlagiListFromJson(pt + "/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName() + "/" + file1NoExtension + ".truth"));
 											document.setOffSetInDoc(getOffSetPlagiListFromJson(pt + "/" + file1NoExtension + ".truth"));
+											 fileName = listOfFile[j].getName().substring(0, listOfFile[j].getName().length() - 6) + ".arff";
 										}
 	
 										if ((document.getOffSetInDoc().isEmpty() && !isPlagi) || (!document.getOffSetInDoc().isEmpty())) {
@@ -373,7 +379,7 @@ public class TextCl {
 												document = feat.setFeatureToSentence(document, 0, hasGroundTruth);
 											}
 	
-											String fileName = listOfFile[j].getName().substring(0, listOfFile[j].getName().length() - 4) + ".arff";
+											System.out.println(fileName);
 	//										writFeatureToFile(addFeatureToArray(document),"result/train/" + listOfPart1[i].getName() + "/" + listOfPart2[m].getName() + "/" + fileName);
 											writFeatureToFile(addFeatureToArray(document),"result/train/" + pt.substring(7, pt.length()) + "/" + fileName);
 	

@@ -2,11 +2,17 @@ package main;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 
+import weka.classifiers.Classifier;
+import weka.classifiers.meta.Stacking;
+import weka.classifiers.meta.Vote;
 import weka.classifiers.trees.HoeffdingTree;
+import weka.classifiers.trees.RandomForest;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.SerializationHelper;
 import weka.core.converters.ArffLoader;
 
 public class ClassifierCl {
@@ -45,6 +51,26 @@ public class ClassifierCl {
 		writer.newLine();
 		writer.flush();
 		writer.close();
+	}
+	
+	public void voteClassifier() throws Exception {
+
+		RandomForest classifierTree = new RandomForest();
+		
+		Classifier[] classifiers = {				
+				(RandomForest) SerializationHelper.read(new FileInputStream("result/randomForest.model")),
+				(RandomForest) SerializationHelper.read(new FileInputStream("result/randomForest1.model"))
+		};
+		
+		
+		ArffLoader loader = new ArffLoader();
+		loader.setFile(new File("result/test/test1/suspious-docs/suspicious-document00001.arff"));
+		Instances testDataInst = loader.getDataSet();
+		testDataInst.setClassIndex(testDataInst.numAttributes() - 1);
+		
+		Vote voter = new Vote();
+		voter.setClassifiers(classifiers);
+		voter.buildClassifier(testDataInst);
 	}
 
 	public void learnClassifierIncremental() throws Exception {
